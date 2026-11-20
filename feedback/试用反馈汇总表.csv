@@ -1,0 +1,4 @@
+﻿编号,日期,试用者,客户端,操作系统,分类,工具名,参数摘要,期望结果,实际结果,命中规则,严重度,是否复现,处理结论,修复版本,备注
+示例-1,2026-11-19,某团队A,Cline,Windows 11,误拦,run_command,"{""command"":""pnpm install""}",放行,被拒,（未命中规则）,P1 影响使用,是,加基线放行,0.1.1,"工具名不在 base-allow-command 列表里"
+示例-2,2026-11-19,某团队B,Cursor,macOS 15,漏拦,bash,"{""command"":""git push origin main --force-with-lease""}",拒绝,放行,,P2 建议,是,放宽规则,待定,"--force-with-lease 是安全版本，当前按设计放行"
+示例-3,2026-11-19,某团队C,VS Code + Roo Code,Windows 10,接入卡点,,,能启动 server,客户端报连接失败,,P0 阻塞,是,文档补充,,"PATH 里没有 node，需写绝对路径"

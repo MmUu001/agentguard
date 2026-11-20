@@ -7,3 +7,6 @@ coverage/
 *.log
 *.tsbuildinfo
 .loomy-attachments/
+
+# 填好的真实反馈留在本地，不入库
+feedback/*.local.csv
