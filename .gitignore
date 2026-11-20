@@ -8,5 +8,8 @@ coverage/
 *.tsbuildinfo
 .loomy-attachments/
 
-# 填好的真实反馈留在本地，不入库
-feedback/*.local.csv
+# 内部运营文档：只留在本地，不进公开仓库
+/feedback/
+/docs/release-checklist.md
+/docs/trial-invite.md
+/docs/juejin-boiling.md
