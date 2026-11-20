@@ -20,11 +20,23 @@
 
 ## 装（约 3 分钟，需要 Node ≥ 20）
 
-### 第 1 步：先看它会拦什么（还没接入就能跑）
+### 第 1 步：先看效果（还没接入就能跑）
 
 ```bash
+npx -y agentguard@beta demo      # 内置假 server，直接看放行/拦截
 npx -y agentguard@beta init --yes
-npx -y agentguard@beta check
+npx -y agentguard@beta check     # 针对你自己的策略做预演
+```
+
+`demo` 的输出长这样（不需要任何 AI 客户端，也不写审计）：
+
+```
+ 判定   调用               命中规则                上游
+  allow  读 ./src/index.ts  base-allow-read         已执行
+  deny   读 ./.env          secrets-read-env        未执行
+  deny   rm -rf /           core-rm-rf-root         未执行
+  allow  rm -rf ./build     base-allow-command      已执行
+  ask*   git push --force   core-force-push         未执行
 ```
 
 > 现在是 beta：命令里的 `@beta` 别去掉（正式版发布后会去掉）。

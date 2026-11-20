@@ -5,11 +5,13 @@
 夹在 agent 与真实 MCP server 之间的 stdio 代理。改 MCP 配置里的一行就生效，对 agent 完全透明。
 
 ```bash
+npx -y agentguard@beta demo      # 不接任何 agent，直接看拦截效果（内置假 server 跑一遍）
 npx -y agentguard@beta init      # 生成 ~/.agentguard/policy.yaml（选策略包）
-npx -y agentguard@beta check     # 先看它会拦住什么，再接入
+npx -y agentguard@beta check     # 看它会拦住什么，再决定接不接
 ```
 
 > 当前是 beta：命令里的 `@beta` 别去掉。正式版转正后这些命令会去掉 `@beta`。
+> `demo` 不需要任何 AI 客户端、不需要配置、不写审计——先看效果再决定装不装。
 
 真实文件系统 server 过代理后，agent 侧看到的是：
 

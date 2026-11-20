@@ -53,6 +53,7 @@ function printUsage(): void {
       '',
       'Usage:',
       `  ${NAME} [--policy <file>]... -- <command> [args...]`,
+      `  ${NAME} init | check | demo`,
       `  ${NAME} audit <list|stats|export> [options]`,
       `  ${NAME} --version`,
       '',
@@ -63,6 +64,7 @@ function printUsage(): void {
       'Example:',
       `  npx -y ${NAME} -- npx -y @modelcontextprotocol/server-filesystem /projects`,
       `  npx -y ${NAME} --policy ~/.agentguard/policy.yaml -- npx -y @modelcontextprotocol/server-filesystem /projects`,
+      `  ${NAME} demo                  # 不接 agent，直接看拦截效果`,
       `  ${NAME} audit stats --since 7d`,
       '',
       'stdout carries the MCP JSON-RPC stream; all diagnostics go to stderr.',
@@ -176,7 +178,12 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
   // 子命令优先于「把第一个词当 upstream 命令」的兜底行为
-  if (argv[0] === 'audit' || argv[0] === 'init' || argv[0] === 'check') {
+  if (
+    argv[0] === 'audit' ||
+    argv[0] === 'init' ||
+    argv[0] === 'check' ||
+    argv[0] === 'demo'
+  ) {
     process.exit(await runCli(argv));
   }
 

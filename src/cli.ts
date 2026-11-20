@@ -13,8 +13,6 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-
 import {
   formatTime,
   listAuditFiles,
@@ -24,7 +22,15 @@ import {
   toCsv,
 } from './audit/query.js';
 import { DEFAULT_KEEP_DAYS } from './audit/writer.js';
+import { displayWidth, pad } from './format.js';
 import { PACKS, findPack, readPackText } from './packs.js';
+import { runDemo } from './demo.js';
+import {
+  baselineRules,
+  buildPolicyText,
+  readPackDoc,
+  type PolicyGroup,
+} from './policy/bootstrap.js';
 import { decide } from './policy/decide.js';
 import { loadPolicy, parsePolicy } from './policy/load.js';
 import type { CompiledPolicy, CompiledRule } from './policy/types.js';
@@ -91,153 +97,6 @@ function stringFlag(flags: Flags, key: string): string | undefined {
   if (raw === undefined) return undefined;
   if (raw === true) throw new FlagError(`--${key} 需要一个值`);
   return raw;
-}
-
-/** 中文 / 全角字符在等宽字体里占两列，按字符数补空格会错位 */
-function charWidth(code: number): number {
-  if (
-    code >= 0x1100 &&
-    (code <= 0x115f ||
-      code === 0x2329 ||
-      code === 0x232a ||
-      (code >= 0x2e80 && code <= 0xa4cf && code !== 0x303f) ||
-      (code >= 0xac00 && code <= 0xd7a3) ||
-      (code >= 0xf900 && code <= 0xfaff) ||
-      (code >= 0xfe30 && code <= 0xfe6f) ||
-      (code >= 0xff00 && code <= 0xff60) ||
-      (code >= 0xffe0 && code <= 0xffe6))
-  ) {
-    return 2;
-  }
-  return 1;
-}
-
-function displayWidth(text: string): number {
-  let width = 0;
-  for (const char of text) width += charWidth(char.codePointAt(0) ?? 0);
-  return width;
-}
-
-function pad(text: string, width: number): string {
-  const current = displayWidth(text);
-  return current >= width ? text : text + ' '.repeat(width - current);
-}
-
-/* ================================================================== *
- * init
- * ================================================================== */
-
-/**
- * dev profile 的基线放行。
- *
- * 为什么需要它：fail-closed 意味着「没写 allow 的工具一律拒绝」，
- * 如果生成的文件里一条 allow 都没有，用户接上去 agent 立刻瘫痪，
- * 第一反应就是把这个东西卸了 —— 那安全价值等于 0。
- * 所以基线放行「日常开发必用」的工具，危险动作交给上面各包的 deny 规则兜住。
- *
- * 想要「只跑白名单工具」的严格模式：`--profile strict`，不生成这些规则。
- */
-function baselineRules(): unknown[] {
-  return [
-    {
-      id: 'base-allow-command',
-      match: { tool: ['bash', 'shell', 'run_command', 'execute_command', 'terminal', 'powershell'] },
-      decision: 'allow',
-      reason: '基线：放行命令工具（危险命令由各包的 deny 规则拦截）',
-    },
-    {
-      id: 'base-allow-argless',
-      match: {
-        tool: [
-          'list_allowed_directories',
-          'grep',
-          'glob',
-          'search',
-          'codebase_search',
-          'list_tools',
-        ],
-      },
-      decision: 'allow',
-      reason: '基线：放行无路径参数的只读工具',
-    },
-    {
-      id: 'base-allow-read',
-      match: {
-        tool: ['read_file', 'read_text_file', 'view_file', 'open_file', 'list_directory', 'directory_tree', 'get_file_info', 'search_files'],
-        'args.path': { glob: '**' },
-      },
-      decision: 'allow',
-      reason: '基线：放行文件读取',
-    },
-    {
-      id: 'base-allow-read-multi',
-      match: { tool: ['read_multiple_files'], 'args.paths': { glob: '**' } },
-      decision: 'allow',
-      reason: '基线：放行批量文件读取',
-    },
-    {
-      id: 'base-allow-write',
-      match: {
-        tool: ['write_file', 'write_text_file', 'edit_file', 'create_directory', 'move_file', 'apply_patch'],
-        'args.path': { glob: '**' },
-      },
-      decision: 'allow',
-      reason: '基线：放行文件写入（系统目录与凭据目录由 core/secrets 拦截）',
-    },
-  ];
-}
-
-function renderBlock(value: unknown): string {
-  const text = stringifyYaml(value, { lineWidth: 0 }).replace(/\n+$/, '');
-  const lines = text.split('\n');
-  return ['  - ' + lines[0], ...lines.slice(1).map((line) => '    ' + line)].join('\n');
-}
-
-interface PolicyGroup {
-  readonly label: string;
-  readonly rules: readonly unknown[];
-}
-
-function buildPolicyText(options: {
-  dryRun: boolean;
-  groups: readonly PolicyGroup[];
-  limits: readonly unknown[];
-}): string {
-  const out: string[] = [
-    '# agentguard policy —— 由 `agentguard init` 生成，可以直接手改。',
-    '# 改完跑 `agentguard check --policy <本文件>`，确认它会拦什么再接入。',
-    '# 优先级：deny > ask > allow；同档取声明在前的一条。',
-    'version: 1',
-    '',
-    'defaults:',
-    '  # 没有任何规则命中时怎么办：deny | allow | ask（默认 deny，fail-closed）',
-    '  on_no_match: deny',
-    '  # 观察模式：true 时只记录不拦截。第一次接入建议先用 --observe 跑一周',
-    `  dry_run: ${options.dryRun}`,
-    '',
-    'rules:',
-  ];
-
-  for (const group of options.groups) {
-    out.push(`  # ── ${group.label}（${group.rules.length} 条）`);
-    for (const rule of group.rules) out.push(renderBlock(rule));
-  }
-
-  if (options.limits.length > 0) {
-    out.push('');
-    out.push('limits:');
-    for (const limit of options.limits) out.push(renderBlock(limit));
-  }
-
-  return out.join('\n') + '\n';
-}
-
-function readPackDoc(id: string): { rules: unknown[]; limits: unknown[] } {
-  const parsed = parseYaml(readPackText(id)) as { rules?: unknown; limits?: unknown } | null;
-  return {
-    rules: Array.isArray(parsed?.rules) ? parsed.rules : [],
-    limits: Array.isArray(parsed?.limits) ? parsed.limits : [],
-  };
 }
 
 function initUsage(): string {
@@ -784,6 +643,49 @@ function auditCommand(argv: readonly string[]): number {
   }
 }
 
+/* ================================================================== *
+ * demo
+ * ================================================================== */
+
+function demoCommand(argv: readonly string[]): Promise<number> {
+  let policyPath: string | undefined;
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === '--policy') {
+      const value = argv[i + 1];
+      if (value === undefined) {
+        process.stderr.write(`${NAME}: --policy 后面必须跟文件路径\n`);
+        return Promise.resolve(2);
+      }
+      policyPath = value;
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith('--policy=')) {
+      policyPath = arg.slice('--policy='.length);
+      continue;
+    }
+    if (arg === '--help' || arg === '-h') {
+      process.stdout.write(
+        [
+          `${NAME} demo [--policy <file>]`,
+          '',
+          '用一个内置的假 MCP server 跑一遍完整链路，打印放行/拦截结果。',
+          '不传 --policy 时：优先用 ~/.agentguard/policy.yaml，没有则用内置默认策略。',
+          '审计已关闭，不会写入你的审计目录。',
+          '',
+        ].join('\n'),
+      );
+      return Promise.resolve(0);
+    }
+    process.stderr.write(`${NAME}: demo 不认识参数 "${arg}"\n`);
+    return Promise.resolve(2);
+  }
+
+  return runDemo({ ...(policyPath === undefined ? {} : { policyPath }) });
+}
+
 /* ================================================================== */
 
 export async function runCli(argv: readonly string[]): Promise<number> {
@@ -792,6 +694,7 @@ export async function runCli(argv: readonly string[]): Promise<number> {
   if (sub === 'audit') return auditCommand(rest);
   if (sub === 'init') return initCommand(rest);
   if (sub === 'check') return checkCommand(rest);
+  if (sub === 'demo') return demoCommand(rest);
 
   return 2;
 }
