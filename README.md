@@ -153,13 +153,17 @@ npx -y agentguard@beta --policy ~/.agentguard/policy.yaml \
   -- npx -y @modelcontextprotocol/server-filesystem /projects
 ```
 
-客户端配置（三家的 JSON 结构完全一样，只是文件位置不同）：
+**不绑定任何一家 agent。** 只要客户端能用 `command` + `args` 以 stdio 方式启动 MCP server，就能用 agentguard。
 
-**Claude Code** —— 用户级 `~/.claude.json` 的 `mcpServers`，或项目根 `.mcp.json`
+| 客户端 | 配置位置 |
+|---|---|
+| **Cline**（VS Code，免费，可接 DeepSeek / 通义 / Kimi 等任意模型） | 设置页 → `MCP Servers` → `Edit Config` |
+| **Roo Code**（VS Code） | 同上 |
+| **Cursor** | `~/.cursor/mcp.json` |
+| **Claude Code** | 项目根 `.mcp.json`，或用户级 `~/.claude.json` |
+| 其它（Cherry Studio / Trae / Qoder 等） | 找到 MCP 配置项，结构一样 |
 
-**Cursor** —— `~/.cursor/mcp.json`
-
-**Cline** —— VS Code 设置里 `MCP Servers` → `Edit Config`（写的就是同一个 JSON）
+**配置结构完全一致**，都是下面这一段：
 
 ```json
 {

@@ -450,7 +450,9 @@ async function initCommand(argv: readonly string[]): Promise<number> {
   lines.push(
     `  1. 预览会拦什么： ${[self.command, ...self.prefix].join(' ')} check --policy "${policyPath}"`,
   );
-  lines.push(`  2. 把下面这段加到 Claude Code / Cursor / Cline 的 MCP 配置里（agentguard 不会改你的配置）：`);
+  lines.push(
+    `  2. 把下面这段加到你的 MCP 客户端配置里（Cline / Cursor / Claude Code 结构一样；agentguard 不会改你的配置）：`,
+  );
   lines.push('');
   lines.push(JSON.stringify(config, null, 2));
   lines.push('');
