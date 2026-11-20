@@ -23,9 +23,11 @@
 ### 第 1 步：先看它会拦什么（还没接入就能跑）
 
 ```bash
-npx --yes <你的 agentguard-0.1.0.tgz 绝对路径> init --yes
-npx --yes <同一个路径> check
+npx -y agentguard@beta init --yes
+npx -y agentguard@beta check
 ```
+
+> 现在是 beta：命令里的 `@beta` 别去掉（正式版发布后会去掉）。
 
 `check` 会打印一张预演表，长这样：
 
@@ -51,7 +53,7 @@ Claude Code 用 `.mcp.json`（或 `~/.claude.json`），Cursor 用 `~/.cursor/mc
     "filesystem": {
       "command": "npx",
       "args": [
-        "--yes", "<你的 tgz 绝对路径>",
+        "-y", "agentguard@beta",
         "--policy", "<家目录>/.agentguard/policy.yaml",
         "--",
         "npx", "-y", "@modelcontextprotocol/server-filesystem", "<你的项目目录>"
@@ -99,7 +101,7 @@ AGENTGUARD_LOG=debug <原命令>
 $env:AGENTGUARD_LOG="debug"; <原命令>
 
 # 看最近的判定
-npx --yes <tgz 绝对路径> audit list --limit 20
+npx -y agentguard@beta audit list --limit 20
 ```
 
 把 `check` 的 stderr 或者 `audit list` 的输出贴给我就行。**不用贴项目代码。**
@@ -111,6 +113,6 @@ npx --yes <tgz 绝对路径> audit list --limit 20
 | Windows / macOS / Linux | ✅ 都在测（Windows 是重点覆盖） |
 | Claude Code / Cursor / Cline | ✅ 同一份配置结构 |
 | Node 版本 | 需要 ≥ 20 |
-| npm 正式包 | 待发布。发布后上面所有 `npx --yes <tgz>` 都能换成 `npx -y agentguard` |
+| npm 版本 | 现在是 `agentguard@beta`（beta 期）。正式转正后命令里的 `@beta` 会去掉 |
 | 工具返回值检查 | ❌ 没做，明确缺口 |
 | 交互式审批（ask 弹确认） | ❌ 没做，`ask` 当前一律拒绝 |

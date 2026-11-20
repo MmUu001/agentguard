@@ -39,8 +39,8 @@
 >
 > **装法**（Node ≥ 20，约 3 分钟）：
 > ```bash
-> npx --yes <tgz 绝对路径> init --yes
-> npx --yes <tgz 绝对路径> check
+> npx -y agentguard@beta init --yes
+> npx -y agentguard@beta check
 > ```
 > 然后把 init 打印的那段 JSON 粘进你的 MCP 配置。
 >

@@ -44,7 +44,7 @@ MCP 协议里，客户端启动 server 的方式是一个配置项：
 把这行包一层，就多了一道闸：
 
 ```json
-{ "command": "npx", "args": ["-y", "agentguard", "--policy", "…/policy.yaml",
+{ "command": "npx", "args": ["-y", "agentguard@beta", "--policy", "…/policy.yaml",
                              "--", "npx", "-y", "@modelcontextprotocol/server-filesystem", "/projects"] }
 ```
 
@@ -160,19 +160,22 @@ $ npx agentguard audit stats
 ## 试试看
 
 ```bash
-npx -y agentguard init
-npx -y agentguard check
+npx -y agentguard@beta init
+npx -y agentguard@beta check
 ```
+
+> 现在是 beta 版，所以命令里带 `@beta`；转正后去掉就是正式版。
+> （下面演示输出里的命令省略了 `@beta`，行为完全一样。）
 
 然后把 `init` 打印的 JSON 片段粘进你的 MCP 配置（Claude Code 的 `.mcp.json`、Cursor 的 `~/.cursor/mcp.json`、Cline 的设置页，结构一样）。
 
 第一次接进去，建议先加 `--observe`：
 
 ```bash
-npx -y agentguard init --observe --force
+npx -y agentguard@beta init --observe --force
 ```
 
-它只记录不拦截，跑一周，`agentguard audit list --json` 看你的 agent 到底在干什么。**大概率你会被它吓到**，然后才知道该收紧什么。这才是这个工具真正的使用姿势——先看，再拦。
+它只记录不拦截，跑一周，`npx -y agentguard@beta audit list --json` 看你的 agent 到底在干什么。**大概率你会被它吓到**，然后才知道该收紧什么。这才是这个工具真正的使用姿势——先看，再拦。
 
 ---
 
