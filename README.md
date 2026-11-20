@@ -1,20 +1,63 @@
 # agentguard
 
-MCP 的本地权限网关。夹在 agent 与真实 MCP server 之间，用 YAML 策略决定「这条工具调用该不该放行」。
+**MCP 工具调用的本地防火墙：一份 YAML 决定 agent 哪些事不许做。**
 
-> 状态：**W8 完成**（代理 + 策略引擎 + 拦截 + 审计 + 策略包 + 加固）。剩下打包分发与首批用户（W9–12）。
-
-## 快速开始
+夹在 agent 与真实 MCP server 之间的 stdio 代理。改 MCP 配置里的一行就生效，对 agent 完全透明。
 
 ```bash
-agentguard init                 # 生成 ~/.agentguard/policy.yaml（交互式选策略包）
-agentguard check                # 预览它会拦住什么
-# 把 init 打印的 JSON 片段粘进 Claude Code / Cursor / Cline 的 MCP 配置
+npx -y agentguard init      # 生成 ~/.agentguard/policy.yaml（选策略包）
+npx -y agentguard check     # 先看它会拦住什么，再接入
 ```
 
-实测冷启动（全新 HOME，含真实 filesystem server 首次成功调用）：**3.3 秒**。
+真实文件系统 server 过代理后，agent 侧看到的是：
 
-`init` **不会修改你的客户端配置**，只生成策略文件并打印可直接复制的片段。
+```
+读 app.ts     → "export const ok = true;\n"
+读 .env       → -32001  Blocked by policy secrets-read-env: 敏感凭据文件（.env）
+写 /etc/hosts → -32001  Blocked by policy core-write-system-path: 写入系统目录或凭据目录
+```
+
+`agentguard audit stats` 按规则聚合每一次判定：
+
+```
+总计      3 条
+判定      deny 2  /  allow 1
+
+按规则
+  core-write-system-path  1
+  secrets-read-env        1
+  base-allow-read         1
+```
+
+## 拦什么
+
+四套策略包（27 条规则），`init` 默认装 `core` + `secrets`：
+
+| 包 | 覆盖 |
+|---|---|
+| `core` | `rm -rf /`（含 `-r -f` 拆写）、系统目录、强制推送、`DROP TABLE`、`curl … \| sh`、写 `/etc` `~/.ssh`、`mkfs` / `dd of=/dev/` |
+| `secrets` | 读 `.env` 家族（放行 `.env.example`）/ 私钥 / 云凭据、云元数据端点 `169.254.169.254`、把密钥发到 issue / PR / HTTP body |
+| `git` | `reset --hard`、`clean -fdx`、删除远端分支、丢弃工作区改动 |
+| `net` | 内网地址、支付类接口、单窗口调用上限 |
+
+18 条攻击用例全部拦截，20 条日常开发操作零误伤（有测试守着，见文末）。
+
+## 不做什么
+
+| 不做 | 原因 |
+|---|---|
+| 不做 LLM API 网关 / 计费 / 厂商路由 | 我们不看模型流量，只看工具调用 |
+| 不做沙箱 / 容器隔离 | 沙箱要换环境；我们要的是在原环境里加一层规则 |
+| 不检查工具返回值 | 代理只看请求方向。返回值里的密钥泄漏拦不住——这是明确缺口，不假装支持 |
+| 不上云、不注册、不联网 | 策略和审计都在本地磁盘，`grep` 就能查 |
+| 不自动改写客户端配置 | `init` 只生成文件 + 打印片段。改坏 `~/.claude.json` 会连带影响你所有 server |
+
+`init` 生成的 JSON 片段自己粘，三家的位置在下面的「客户端配置」里。
+
+> 为什么做成这样、它拦不住什么：见 [docs/launch-article.md](docs/launch-article.md)。
+
+> 状态：**W10 完成**（代码、策略包、审计、打包边界、本地 git 基线）。npm 首发待登录后执行 `npm publish`。
+> 源码 2,477 行（14 个文件）+ 319 行策略包 YAML；运行时依赖 1 个（`yaml`）；Node ≥ 20。
 
 ## 现状
 
