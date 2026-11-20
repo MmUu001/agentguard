@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 430px; }
+  body {
+    background: linear-gradient(160deg, #0b0f14, #0d131a);
+    font-family: "Microsoft YaHei", system-ui, sans-serif;
+    color: #e6edf3;
+    display: flex; flex-direction: column;
+    padding: 26px 44px 22px;
+  }
+  .title { font-size: 20px; font-weight: 700; letter-spacing: .4px; color: #cbd5e1; }
+  .sub { margin-top: 6px; font-size: 13px; color: #64748b; }
+
+  .flow {
+    flex: 1; margin-top: 14px;
+    display: grid; grid-template-columns: 1fr 44px 1.15fr 44px 1fr;
+    align-items: center;
+  }
+  .box {
+    border-radius: 12px; padding: 16px 18px; min-height: 120px;
+    display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  }
+  .box h3 { font-size: 15.5px; font-weight: 700; }
+  .box p { font-size: 12.5px; color: #8b98a5; line-height: 1.55; }
+  .mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 11.5px; }
+
+  .agent { background: rgba(56,189,248,.06); border: 1px solid rgba(56,189,248,.28); }
+  .agent h3 { color: #7dd3fc; }
+  .guard { background: rgba(74,222,128,.07); border: 1px solid rgba(74,222,128,.34); box-shadow: 0 0 0 1px rgba(74,222,128,.06), 0 12px 34px rgba(16,185,129,.10); }
+  .guard h3 { color: #4ade80; }
+  .server { background: rgba(148,163,184,.05); border: 1px solid rgba(148,163,184,.22); }
+  .server h3 { color: #cbd5e1; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; color: #475569; font-size: 22px; }
+
+  .note {
+    margin-top: 18px; display: flex; gap: 10px; align-items: center;
+    font-size: 12.5px; color: #64748b;
+  }
+  .tag {
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 11.5px; color: #94a3b8;
+    border: 1px solid #26313d; border-radius: 6px; padding: 3px 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="title">拦截点：MCP 的 command 字段</div>
+  <div class="sub">agent 完全不知道中间多了一个进程；只依赖 MCP 协议，不依赖任何一家客户端</div>
+
+  <div class="flow">
+    <div class="box agent">
+      <h3>AI 客户端</h3>
+      <p>Cline / Cursor / Roo Code<br>任何以 stdio 启动 MCP server 的客户端</p>
+      <div class="mono" style="color:#7dd3fc">tools/call →</div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="box guard">
+      <h3>agentguard</h3>
+      <p>读一份 YAML 策略，在调用到达 server 之前判定<br>
+      deny &gt; ask &gt; allow · 未命中默认拒绝</p>
+      <div class="mono" style="color:#4ade80">allow → 转发 ／ deny → 回 -32001</div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="box server">
+      <h3>真实 MCP server</h3>
+      <p>filesystem / github / postgres …<br>只在放行时才会收到这条调用</p>
+      <div class="mono" style="color:#94a3b8">— 已授权调用</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="tag">--policy policy.yaml</span>
+    <span>所有判定写入本地 JSONL（~/.agentguard/audit/），不联网、不上报</span>
+  </div>
+</body>
+</html>

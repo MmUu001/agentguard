@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 720px; }
+  body {
+    background: #0b0e13;
+    padding: 26px;
+    font-family: "Microsoft YaHei", system-ui, sans-serif;
+    display: flex;
+  }
+  .win {
+    flex: 1;
+    background: #0d1117;
+    border: 1px solid #232b36;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .bar {
+    height: 40px; flex: 0 0 40px;
+    background: #161b22; border-bottom: 1px solid #232b36;
+    display: flex; align-items: center; gap: 8px; padding: 0 14px;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .d1{background:#ff5f57} .d2{background:#febc2e} .d3{background:#28c840}
+  .title {
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 12.5px; color: #6e7681; margin-left: 10px;
+  }
+  .body { padding: 18px 22px; flex: 1; }
+  .line {
+    font-family: "Cascadia Mono", Consolas, "Microsoft YaHei", monospace;
+    font-size: 14.5px; line-height: 30px; color: #c9d1d9;
+    white-space: pre;
+  }
+  .ps { color: #7ee787; }
+  .path { color: #79c0ff; }
+  .cmd { color: #e6edf3; }
+  .muted { color: #8b949e; }
+  .grid {
+    display: grid; grid-template-columns: 76px 236px 1fr 92px;
+    column-gap: 16px; font-size: 14.5px; line-height: 33px;
+    font-family: "Cascadia Mono", Consolas, "Microsoft YaHei", monospace;
+  }
+  .hd { font-size: 12.5px; color: #5b6672; line-height: 30px; letter-spacing: .5px; border-bottom: 1px solid #1c242e; }
+  .allow { color: #3fb950; }
+  .deny { color: #f85149; }
+  .ask { color: #d29922; }
+  .rule { color: #8b949e; }
+  .up { color: #5b6672; }
+  .cursor { display:inline-block; width:8px; height:16px; background:#c9d1d9; vertical-align:-3px; margin-left:2px; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="bar">
+    <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+    <span class="title">PowerShell — agentguard demo</span>
+  </div>
+  <div class="body">
+    <div class="line"><span class="ps">PS</span> <span class="path">D:\dev\my-app&gt;</span> <span class="cmd">npx -y @leeruu/agentguard@beta demo</span><span class="cursor"></span></div>
+    <div class="line"> </div>
+    <div class="line muted">agentguard demo —— 内置假 MCP server，走真实代理链路跑一遍</div>
+    <div class="line muted">策略      内置默认策略（等同于 init 的 core + secrets + dev 基线）</div>
+    <div class="line"> </div>
+
+    <div class="grid">
+      <div class="hd">判定</div><div class="hd">调用</div><div class="hd">命中规则</div><div class="hd">上游</div>
+
+      <div class="allow">allow</div><div>读 ./src/index.ts</div><div class="rule">base-allow-read</div><div class="up">已执行</div>
+      <div class="deny">deny</div><div>读 ./.env</div><div class="rule">secrets-read-env</div><div class="up">未执行</div>
+      <div class="deny">deny</div><div>写 /etc/hosts</div><div class="rule">core-write-system-path</div><div class="up">未执行</div>
+      <div class="deny">deny</div><div>rm -rf /</div><div class="rule">core-rm-rf-root</div><div class="up">未执行</div>
+      <div class="allow">allow</div><div>rm -rf ./build</div><div class="rule">base-allow-command</div><div class="up">已执行</div>
+      <div class="ask">ask*</div><div>git push --force</div><div class="rule">core-force-push</div><div class="up">未执行</div>
+      <div class="deny">deny</div><div>未定义的工具</div><div class="rule">(fail-closed)</div><div class="up">未执行</div>
+    </div>
+
+    <div class="line"> </div>
+    <div class="line muted">  合计：allow 2 / deny 4 / ask* 1</div>
+    <div class="line muted">  ask* 没有审批通道时按拒绝处理（fail-closed），不是放行</div>
+    <div class="line muted">  审计已关闭（演示不写 ~/.agentguard/audit）</div>
+  </div>
+</div>
+</body>
+</html>
