@@ -181,4 +181,7 @@ npx -y @leeruu/agentguard@beta init --observe --force
 
 `agentguard` 是 Apache-2.0 开源的，运行时依赖 1 个（`yaml`）。策略包里的每条规则都是可读的 YAML，欢迎改、欢迎骂。
 
+源码：https://github.com/MmUu001/agentguard
+npm：https://www.npmjs.com/package/@leeruu/agentguard
+
 如果你被某条规则误伤了，或者你的 agent 干了件我没想到的事，那正是我最想听的反馈——**误伤和漏拦，是这类工具唯一真正的失败方式**。

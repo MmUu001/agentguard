@@ -93,6 +93,8 @@ Apache-2.0，不联网、不上报、不需要账号。策略和审计都在 ~/.
 
 https://www.npmjs.com/package/@leeruu/agentguard
 
+源码仓库：https://github.com/MmUu001/agentguard
+
 最想听的反馈是：你的 agent 干过什么「差点出事」的事，而这个东西没拦住。
 ```
 

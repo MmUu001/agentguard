@@ -231,6 +231,8 @@ npx -y @leeruu/agentguard@beta audit stats --since 7d
 
 npm 地址：https://www.npmjs.com/package/@leeruu/agentguard
 
+源码仓库：https://github.com/MmUu001/agentguard
+
 国内网络如果 npx 慢，加镜像参数（实测 1.9 秒）：
 
 ```bash

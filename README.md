@@ -59,11 +59,11 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 
 `init` 生成的 JSON 片段自己粘，三家的位置在下面的「客户端配置」里。
 
-> 为什么做成这样、它拦不住什么：见仓库里的 `docs/launch-article.md`。
-> （等仓库地址确定、`package.json` 补上 `repository` 之后，这里会换成可点击的链接）
+> 为什么做成这样、它拦不住什么：见仓库里的 [`docs/launch-article.md`](docs/launch-article.md)。
 
 > 状态：**已发布** `@leeruu/agentguard@0.1.0`（beta）。`core` + `secrets` + `git` + `net` 四套策略包，323 条断言全绿。
 > 源码 2,477 行（14 个文件）+ 319 行策略包 YAML；运行时依赖 1 个（`yaml`）；Node ≥ 20。
+> 仓库：<https://github.com/MmUu001/agentguard> · npm：<https://www.npmjs.com/package/@leeruu/agentguard>
 
 ## 现状
 

@@ -169,4 +169,6 @@ npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard@beta demo
 
 npm：https://www.npmjs.com/package/@leeruu/agentguard
 
+源码仓库：https://github.com/MmUu001/agentguard
+
 最想听的反馈是：**你的 agent 干过什么「差点出事」的事，而这个东西没拦住。** 漏拦比误拦更值得说。
