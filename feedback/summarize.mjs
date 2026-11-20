@@ -178,4 +178,27 @@ if (conclusions.length > 0) {
   }
 }
 
+// 商业化信号：只有「有人明确说会买」才值得投入做团队版
+const biz = data.filter((r) => {
+  const v = r['付费场景'] ?? '';
+  return v !== '' && v !== '未问';
+});
+if (biz.length > 0) {
+  console.log('\n付费场景（团队版是否值得做，看这一栏）');
+  const map = new Map();
+  for (const r of biz) map.set(r['付费场景'], (map.get(r['付费场景']) ?? 0) + 1);
+  for (const [key, n] of [...map.entries()].sort((a, b) => b[1] - a[1])) {
+    console.log(`  ${pad(key, 14)} ${n}`);
+  }
+  const team = map.get('团队版') ?? 0;
+  const industry = map.get('行业包') ?? 0;
+  if (team + industry > 0) {
+    console.log(`  ↑ ${team + industry} 个团队表达了付费场景，值得进一步访谈（问预算与决策人）`);
+  } else {
+    console.log('  ↑ 全是「不需要」：说明当下没有付费市场，先做装机量');
+  }
+} else {
+  console.log('\n付费场景：还没人回答——试用时务必问一句「团队版你们会买吗、预算谁定」');
+}
+
 console.log('');
