@@ -12,6 +12,7 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 
 > 当前是 beta：命令里的 `@beta` 别去掉。正式版转正后这些命令会去掉 `@beta`。
 > `demo` 不需要任何 AI 客户端、不需要配置、不写审计——先看效果再决定装不装。
+> 国内网络慢的话加 `--registry=https://registry.npmmirror.com`（实测 1.9 秒）。
 
 真实文件系统 server 过代理后，agent 侧看到的是：
 

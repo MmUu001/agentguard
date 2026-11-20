@@ -40,6 +40,7 @@ npx -y @leeruu/agentguard@beta check     # 针对你自己的策略做预演
 ```
 
 > 现在是 beta：命令里的 `@beta` 别去掉（正式版发布后会去掉）。
+> 国内网络慢的话加镜像参数，实测 1.9 秒：`--registry=https://registry.npmmirror.com`
 
 `check` 会打印一张预演表，长这样：
 

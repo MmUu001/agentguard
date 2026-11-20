@@ -67,6 +67,9 @@ agent 完全不知道中间多了个进程。策略是一份 YAML：
 
     $ npx -y @leeruu/agentguard@beta demo
 
+（需要 Node ≥20。国内网络如果卡，加个镜像参数，实测 1.9 秒：
+  `npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard@beta demo`）
+
      判定   调用               命中规则                上游
      allow  读 ./src/index.ts  base-allow-read         已执行
      deny   读 ./.env          secrets-read-env        未执行
@@ -105,9 +108,11 @@ https://www.npmjs.com/package/@leeruu/agentguard
 做法是在 MCP 配置里把 server 命令包一层，用 YAML 决定哪些调用不许做。
 不改 agent、不换环境、不装沙箱。
 
-不接入也能先跑（内置假 server，30 秒）：
+不接入也能先跑（内置假 server，30 秒，需要 Node ≥20）：
 
     npx -y @leeruu/agentguard@beta demo
+
+国内网络卡的话加镜像：`--registry=https://registry.npmmirror.com`
 
       deny   rm -rf /           ← 拦住
       deny   读 ./.env          ← 拦住
