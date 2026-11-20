@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>agentguard cover</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 420px at 12% -10%, rgba(56,189,248,.14), transparent 60%),
+      radial-gradient(700px 380px at 105% 110%, rgba(248,113,113,.10), transparent 60%),
+      linear-gradient(160deg, #0b0f14 0%, #0e141b 55%, #0b1017 100%);
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    color: #e6edf3;
+    padding: 44px 56px 36px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: 39px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    line-height: 1.18;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .badge {
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 13px;
+    font-weight: 400;
+    color: #7dd3fc;
+    border: 1px solid rgba(125, 211, 252, .35);
+    background: rgba(56, 189, 248, .08);
+    border-radius: 999px;
+    padding: 5px 12px;
+    letter-spacing: .2px;
+    white-space: nowrap;
+  }
+
+  .subtitle {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #8b98a5;
+    letter-spacing: .3px;
+  }
+
+  .terminal {
+    margin-top: 26px;
+    flex: 1;
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .03);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bar {
+    height: 38px;
+    flex: 0 0 38px;
+    background: #161b22;
+    border-bottom: 1px solid #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+  }
+
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .d1 { background: #ff5f57; }
+  .d2 { background: #febc2e; }
+  .d3 { background: #28c840; }
+
+  .bar-title {
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 12.5px;
+    color: #6e7681;
+    margin-left: 8px;
+  }
+
+  .body { padding: 16px 20px 12px; }
+
+  .cmd {
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 13.5px;
+    color: #8b98a5;
+    margin-bottom: 12px;
+  }
+  .cmd .p { color: #4ade80; }
+  .cmd .a { color: #e6edf3; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 74px 232px 1fr 86px;
+    column-gap: 14px;
+    font-size: 14px;
+    line-height: 34px;
+  }
+
+  .hd {
+    font-size: 12.5px;
+    color: #5b6672;
+    border-bottom: 1px solid #1c242e;
+    line-height: 30px;
+    letter-spacing: .5px;
+  }
+
+  .mono {
+    font-family: "Cascadia Mono", Consolas, "Microsoft YaHei", monospace;
+  }
+
+  .allow { color: #4ade80; }
+  .deny { color: #f87171; }
+  .ask { color: #fbbf24; }
+  .rule { color: #7d8894; }
+  .up { color: #5b6672; }
+
+  .foot {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .foot-cmd {
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 13px;
+    color: #6e7681;
+  }
+  .foot-cmd b { color: #7dd3fc; font-weight: 400; }
+
+  .foot-note { font-size: 12.5px; color: #4b5663; }
+</style>
+</head>
+<body>
+
+  <div class="title">
+    MCP 工具调用的本地防火墙
+    <span class="badge">@leeruu/agentguard</span>
+  </div>
+  <div class="subtitle">一份 YAML，决定 agent 哪些事不许做 · fail-closed · 不联网 · Apache-2.0</div>
+
+  <div class="terminal">
+    <div class="bar">
+      <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+      <span class="bar-title">agentguard demo — 内置假 MCP server，走真实代理链路</span>
+    </div>
+
+    <div class="body">
+      <div class="cmd"><span class="p">$</span> <span class="a">npx -y @leeruu/agentguard@beta demo</span></div>
+
+      <div class="grid">
+        <div class="hd">判定</div>
+        <div class="hd">调用</div>
+        <div class="hd">命中规则</div>
+        <div class="hd">上游</div>
+
+        <div class="mono allow">allow</div>
+        <div class="mono">读 ./src/index.ts</div>
+        <div class="mono rule">base-allow-read</div>
+        <div class="mono up">已执行</div>
+
+        <div class="mono deny">deny</div>
+        <div class="mono">读 ./.env</div>
+        <div class="mono rule">secrets-read-env</div>
+        <div class="mono up">未执行</div>
+
+        <div class="mono deny">deny</div>
+        <div class="mono">写 /etc/hosts</div>
+        <div class="mono rule">core-write-system-path</div>
+        <div class="mono up">未执行</div>
+
+        <div class="mono deny">deny</div>
+        <div class="mono">rm -rf /</div>
+        <div class="mono rule">core-rm-rf-root</div>
+        <div class="mono up">未执行</div>
+
+        <div class="mono allow">allow</div>
+        <div class="mono">rm -rf ./build</div>
+        <div class="mono rule">base-allow-command</div>
+        <div class="mono up">已执行</div>
+
+        <div class="mono ask">ask*</div>
+        <div class="mono">git push --force</div>
+        <div class="mono rule">core-force-push</div>
+        <div class="mono up">未执行</div>
+
+        <div class="mono deny">deny</div>
+        <div class="mono">未定义的工具</div>
+        <div class="mono rule">(fail-closed)</div>
+        <div class="mono up">未执行</div>
+      </div>
+
+      <div class="foot">
+        <div class="foot-cmd">合计 <b>allow 2 / deny 4 / ask* 1</b></div>
+        <div class="foot-note">被拦的调用根本没到达 server</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
