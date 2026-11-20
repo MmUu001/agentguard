@@ -112,8 +112,8 @@ const init = await sh(`"${bin}" init --yes --dir "${homeDir}"`, appDir);
 check('安装后 init 可用', init.code === 0 && existsSync(join(homeDir, 'policy.yaml')), `exit=${init.code}`);
 check(
   '安装形态下打印的配置片段用 npx + agentguard@beta',
-  init.stdout.includes('"agentguard@beta"') && init.stdout.includes('"npx"'),
-  init.stdout.includes('agentguard@beta') ? '' : '片段里没有 agentguard@beta',
+  init.stdout.includes('"@leeruu/agentguard@beta"') && init.stdout.includes('"npx"'),
+  init.stdout.includes('@leeruu/agentguard@beta') ? '' : '片段里没有 scoped 包标识',
 );
 
 const checked = await sh(`"${bin}" check --policy "${join(homeDir, 'policy.yaml')}"`, appDir);

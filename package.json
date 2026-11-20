@@ -1,8 +1,11 @@
 {
-  "name": "agentguard",
+  "name": "@leeruu/agentguard",
   "version": "0.1.0",
   "description": "Local permission gateway for MCP agents: YAML policy, deterministic decisions, full audit trail.",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "engines": {
     "node": ">=20"

@@ -39,8 +39,8 @@
 >
 > **装法**（Node ≥ 20，约 3 分钟）：
 > ```bash
-> npx -y agentguard@beta init --yes
-> npx -y agentguard@beta check
+> npx -y @leeruu/agentguard@beta init --yes
+> npx -y @leeruu/agentguard@beta check
 > ```
 > 然后把 init 打印的那段 JSON 粘进你的 MCP 配置。
 >

@@ -5,9 +5,9 @@
 夹在 agent 与真实 MCP server 之间的 stdio 代理。改 MCP 配置里的一行就生效，对 agent 完全透明。
 
 ```bash
-npx -y agentguard@beta demo      # 不接任何 agent，直接看拦截效果（内置假 server 跑一遍）
-npx -y agentguard@beta init      # 生成 ~/.agentguard/policy.yaml（选策略包）
-npx -y agentguard@beta check     # 看它会拦住什么，再决定接不接
+npx -y @leeruu/agentguard@beta demo      # 不接任何 agent，直接看拦截效果（内置假 server 跑一遍）
+npx -y @leeruu/agentguard@beta init      # 生成 ~/.agentguard/policy.yaml（选策略包）
+npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接不接
 ```
 
 > 当前是 beta：命令里的 `@beta` 别去掉。正式版转正后这些命令会去掉 `@beta`。
@@ -61,7 +61,7 @@ npx -y agentguard@beta check     # 看它会拦住什么，再决定接不接
 > 为什么做成这样、它拦不住什么：见仓库里的 `docs/launch-article.md`。
 > （等仓库地址确定、`package.json` 补上 `repository` 之后，这里会换成可点击的链接）
 
-> 状态：**W10 完成**（代码、策略包、审计、打包边界、本地 git 基线）。npm 首发待登录后执行 `npm publish`。
+> 状态：**W10 完成**（代码、策略包、审计、打包边界、本地 git 基线）。以 `@leeruu/agentguard@beta` 发布中。
 > 源码 2,477 行（14 个文件）+ 319 行策略包 YAML；运行时依赖 1 个（`yaml`）；Node ≥ 20。
 
 ## 现状
@@ -151,7 +151,7 @@ agentguard [--policy <file>]... -- <真实 mcp server 命令> [参数...]
 示例：
 
 ```bash
-npx -y agentguard@beta --policy ~/.agentguard/policy.yaml \
+npx -y @leeruu/agentguard@beta --policy ~/.agentguard/policy.yaml \
   -- npx -y @modelcontextprotocol/server-filesystem /projects
 ```
 
@@ -173,7 +173,7 @@ npx -y agentguard@beta --policy ~/.agentguard/policy.yaml \
     "filesystem": {
       "command": "npx",
       "args": [
-        "-y", "agentguard@beta",
+        "-y", "@leeruu/agentguard@beta",
         "--policy", "C:/Users/me/.agentguard/policy.yaml",
         "--",
         "npx", "-y", "@modelcontextprotocol/server-filesystem", "/projects"

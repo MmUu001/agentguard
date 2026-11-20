@@ -155,9 +155,12 @@ async function choosePacks(flags: Flags): Promise<string[]> {
  *   - 本地仓库直接跑（例如 node dist/main.js init）→ `node <本文件的绝对路径>`
  *
  * beta 期间发包标识带 @beta：npm 上没有 latest 标签，`npx -y agentguard` 会 404。
- * 转正时把 PUBLISHED_SPEC 改回 'agentguard'（见 docs/release-checklist.md）。
+ * 转正时把 PUBLISHED_SPEC 改回不带 @beta 的形态（见 docs/release-checklist.md）。
+ *
+ * 为什么要 scope：`agentguard` 这个无 scope 名被 npm 的相似性策略永久拦住
+ * （与已存在的 agent-guard 太像），scoped 包不参与该检查。
  */
-const PUBLISHED_SPEC = 'agentguard@beta';
+const PUBLISHED_SPEC = '@leeruu/agentguard@beta';
 
 function selfInvocation(): { command: string; prefix: string[] } {
   const entry = process.argv[1] ?? '';
