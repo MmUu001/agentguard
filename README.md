@@ -61,7 +61,7 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 > 为什么做成这样、它拦不住什么：见仓库里的 `docs/launch-article.md`。
 > （等仓库地址确定、`package.json` 补上 `repository` 之后，这里会换成可点击的链接）
 
-> 状态：**W10 完成**（代码、策略包、审计、打包边界、本地 git 基线）。以 `@leeruu/agentguard@beta` 发布中。
+> 状态：**已发布** `@leeruu/agentguard@0.1.0`（beta）。`core` + `secrets` + `git` + `net` 四套策略包，323 条断言全绿。
 > 源码 2,477 行（14 个文件）+ 319 行策略包 YAML；运行时依赖 1 个（`yaml`）；Node ≥ 20。
 
 ## 现状
