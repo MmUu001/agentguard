@@ -5,7 +5,7 @@
  *   -32001 POLICY_DENIED       策略拒绝（含 ask 因无审批通道而按拒绝处理）
  *   -32002 POLICY_UNAVAILABLE  策略不可用 / 判定过程本身失败 → fail-closed
  *   -32003 UPSTREAM_EXITED     upstream 已退出，未完成的请求不能让它一直等
- *   -32004 RATE_LIMITED        触发限流（结构预留，W4 随审计一起生效）
+ *   -32004 RATE_LIMITED        触发限流
  *
  * -32603（内部错误）是协议标准码，upstream 意外崩溃时用它回给 client。
  */

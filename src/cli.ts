@@ -99,6 +99,16 @@ function stringFlag(flags: Flags, key: string): string | undefined {
   return raw;
 }
 
+/** --decision 只接受三档；写错就明确报错，而不是静默返回空结果 */
+function decisionFlag(flags: Flags): string | undefined {
+  const value = stringFlag(flags, 'decision');
+  if (value === undefined) return undefined;
+  if (value !== 'allow' && value !== 'deny' && value !== 'ask') {
+    throw new FlagError(`--decision 只支持 allow / deny / ask，收到 "${value}"`);
+  }
+  return value;
+}
+
 function initUsage(): string {
   return [
     `${NAME} init [options]`,
@@ -160,8 +170,7 @@ async function choosePacks(flags: Flags): Promise<string[]> {
  * 为什么要 scope：`agentguard` 这个无 scope 名被 npm 的相似性策略永久拦住
  * （与已存在的 agent-guard 太像），scoped 包不参与该检查。
  */
-const PUBLISHED_SPEC = '@leeruu/agentguard@beta';
-
+export const PUBLISHED_SPEC = '@leeruu/agentguard@beta';
 function selfInvocation(): { command: string; prefix: string[] } {
   const entry = process.argv[1] ?? '';
   const isInstalled = /[\\/]node_modules[\\/]/.test(entry);
@@ -268,10 +277,16 @@ async function initCommand(argv: readonly string[]): Promise<number> {
     return 2;
   }
 
-  mkdirSync(join(targetDir, 'packs'), { recursive: true });
-  writeFileSync(policyPath, text, 'utf8');
-  for (const id of selected) {
-    writeFileSync(join(targetDir, 'packs', `${id}.yaml`), readPackText(id), 'utf8');
+  try {
+    mkdirSync(join(targetDir, 'packs'), { recursive: true });
+    writeFileSync(policyPath, text, 'utf8');
+    for (const id of selected) {
+      writeFileSync(join(targetDir, 'packs', `${id}.yaml`), readPackText(id), 'utf8');
+    }
+  } catch (err) {
+    // 目标路径可能是文件、只读盘、无权限；给人话，不要甩堆栈
+    process.stderr.write(`${NAME}: 写入失败（${targetDir}）：${(err as Error).message}\n`);
+    return 2;
   }
 
   const self = selfInvocation();
@@ -501,7 +516,7 @@ function cmdList(flags: Flags): number {
   const records = readRecords({
     dir: auditDir(),
     since: sinceText === undefined ? undefined : parseSince(sinceText),
-    decision: stringFlag(flags, 'decision'),
+    decision: decisionFlag(flags),
     tool: stringFlag(flags, 'tool'),
     limit: numberFlag(flags, 'limit', 20),
   });
@@ -600,7 +615,7 @@ function cmdExport(flags: Flags): number {
   const records = readRecords({
     dir: auditDir(),
     since: sinceText === undefined ? undefined : parseSince(sinceText),
-    decision: stringFlag(flags, 'decision'),
+    decision: decisionFlag(flags),
     tool: stringFlag(flags, 'tool'),
   });
 
@@ -626,6 +641,11 @@ function auditCommand(argv: readonly string[]): number {
 
   try {
     const flags = parseFlags(rest);
+    // `audit list --help` 也应显示帮助，而不是被当成普通参数忽略
+    if (flags.help === true || flags.h === true) {
+      process.stdout.write(auditUsage() + '\n');
+      return 0;
+    }
     switch (action) {
       case 'list':
         return cmdList(flags);

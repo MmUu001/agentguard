@@ -53,8 +53,8 @@ export interface PolicyDefaults {
 }
 
 /**
- * 限流规则。W2 只解析与校验，不执行 —— 计数需要跨调用的窗口状态，
- * 与审计一起在 W4 接入。在这里保留结构，避免用户写了 `limits` 却被静默丢弃。
+ * 限流规则。由 `src/limits.ts` 的 LimitTracker 在放行路径上执行：
+ * 同一窗口内该工具调用超过 maxCalls 就回 -32004。
  */
 export interface LimitRule {
   readonly tools: readonly string[];

@@ -19,7 +19,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { AuditWriter, pruneAudit } from './audit/writer.js';
-import { auditDir, auditKeepDays, runCli } from './cli.js';
+import { auditDir, auditKeepDays, PUBLISHED_SPEC, runCli } from './cli.js';
 import { logger } from './logger.js';
 import { loadPolicy, parsePolicy } from './policy/load.js';
 import { PolicyError, type CompiledPolicy } from './policy/types.js';
@@ -46,8 +46,8 @@ function readVersion(): string {
   }
 }
 
-function printUsage(): void {
-  process.stdout.write(
+function printUsage(to: NodeJS.WritableStream = process.stdout): void {
+  to.write(
     [
       `${NAME} ${readVersion()}`,
       '',
@@ -62,8 +62,8 @@ function printUsage(): void {
       `                   不传时读 ${DEFAULT_POLICY}`,
       '',
       'Example:',
-      `  npx -y ${NAME} -- npx -y @modelcontextprotocol/server-filesystem /projects`,
-      `  npx -y ${NAME} --policy ~/.agentguard/policy.yaml -- npx -y @modelcontextprotocol/server-filesystem /projects`,
+      `  npx -y ${PUBLISHED_SPEC} -- npx -y @modelcontextprotocol/server-filesystem /projects`,
+      `  npx -y ${PUBLISHED_SPEC} --policy ~/.agentguard/policy.yaml -- npx -y @modelcontextprotocol/server-filesystem /projects`,
       `  ${NAME} demo                  # 不接 agent，直接看拦截效果`,
       `  ${NAME} audit stats --since 7d`,
       '',
@@ -114,10 +114,21 @@ function fail(message: string, code: number): never {
   process.exit(code);
 }
 
-/** 退出前把 stdout 队列排空，否则最后一条响应可能留在管道缓冲里被丢掉 */
-function flushStdout(): Promise<void> {
+/** 退出前把 stdout 队列排空；限时兜底，避免管道已断时永远等不到回调 */
+function flushStdout(timeoutMs = 1000): Promise<void> {
   return new Promise((resolve) => {
-    process.stdout.write('', () => resolve());
+    let settled = false;
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    try {
+      process.stdout.write('', finish);
+    } catch {
+      finish();
+    }
+    setTimeout(finish, timeoutMs);
   });
 }
 
@@ -129,12 +140,8 @@ function loadOrExit(paths: readonly string[]): CompiledPolicy {
       rules: policy.rules.length,
       on_no_match: policy.defaults.onNoMatch,
       dry_run: policy.defaults.dryRun,
+      limits: policy.limits.length,
     });
-    if (policy.limits.length > 0) {
-      logger.warn('limits 已解析但尚未执行（留到 W4 随审计一起接入）', {
-        count: policy.limits.length,
-      });
-    }
     return policy;
   } catch (err) {
     const message = err instanceof PolicyError ? err.message : (err as Error).message;
@@ -164,12 +171,13 @@ function openAudit(): AuditWriter | null {
   }
 }
 
-function resolvePolicy(explicit: readonly string[]): CompiledPolicy {  if (explicit.length > 0) return loadOrExit(explicit);
+function resolvePolicy(explicit: readonly string[]): CompiledPolicy {
+  if (explicit.length > 0) return loadOrExit(explicit);
   if (existsSync(DEFAULT_POLICY)) return loadOrExit([DEFAULT_POLICY]);
 
   logger.warn('未找到策略文件，以 deny-all 启动（所有 tools/call 都会被拒绝）', {
     expected: DEFAULT_POLICY,
-    hint: '用 --policy <file> 指定策略，或等待 W5 的 agentguard init',
+    hint: '用 --policy <file> 指定，或先跑 agentguard init 生成一份',
   });
   return parsePolicy('version: 1\nrules: []\n', '<built-in deny-all>');
 }
@@ -182,14 +190,17 @@ async function main(): Promise<void> {
     process.stderr.write(`agentguard: stdout 写入失败（客户端可能已断开）：${err.message}\n`);
   });
 
-  // 子命令优先于「把第一个词当 upstream 命令」的兜底行为
+  // 子命令优先于「把第一个词当 upstream 命令」的兜底行为。
+  // 退出前显式 flush：engines 声明的是 Node >=20，不同大版本对 exit 时 stdout 的处理不完全一致。
   if (
     argv[0] === 'audit' ||
     argv[0] === 'init' ||
     argv[0] === 'check' ||
     argv[0] === 'demo'
   ) {
-    process.exit(await runCli(argv));
+    const code = await runCli(argv);
+    await flushStdout();
+    process.exit(code);
   }
 
   let options: CliOptions;
@@ -198,7 +209,7 @@ async function main(): Promise<void> {
   } catch (err) {
     if (err instanceof UsageError) {
       process.stderr.write(`${NAME}: ${err.message}\n\n`);
-      printUsage();
+      printUsage(process.stderr);
       process.exit(2);
     }
     throw err;
@@ -215,7 +226,7 @@ async function main(): Promise<void> {
 
   if (options.command.length === 0) {
     process.stderr.write(`${NAME}: no upstream command after "--"\n\n`);
-    printUsage();
+    printUsage(process.stderr);
     process.exit(2);
   }
 

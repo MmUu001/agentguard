@@ -191,7 +191,8 @@ async function main() {
 
   try {
     const u = await runNode([MAIN]);
-    u.code === 2 && u.stdout.includes('Usage:')
+    // 错误路径的用法说明走 stderr（Unix 约定），stdout 保持干净
+    u.code === 2 && u.stderr.includes('Usage:')
       ? pass('无参数时打印用法并以 2 退出')
       : fail('无参数时打印用法并以 2 退出', new Error(`code=${u.code}`));
   } catch (err) {
