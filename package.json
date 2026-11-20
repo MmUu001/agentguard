@@ -28,7 +28,8 @@
     "check:lint": "node tests/lint-check.mjs",
     "check:coldstart": "node tests/coldstart-check.mjs",
     "check:real": "node tests/real-fs-check.mjs",
-    "check:all": "node tests/w1-check.mjs && node tests/w2-check.mjs && node tests/w3-check.mjs && node tests/w4-check.mjs && node tests/w5-check.mjs && node tests/attacks-check.mjs && node tests/stress-check.mjs && node tests/lint-check.mjs && node tests/coldstart-check.mjs && node tests/real-fs-check.mjs"
+    "check:pkg": "node tests/install-check.mjs",
+    "check:all": "node tests/w1-check.mjs && node tests/w2-check.mjs && node tests/w3-check.mjs && node tests/w4-check.mjs && node tests/w5-check.mjs && node tests/attacks-check.mjs && node tests/stress-check.mjs && node tests/lint-check.mjs && node tests/coldstart-check.mjs && node tests/real-fs-check.mjs && node tests/install-check.mjs"
   },
   "keywords": [
     "mcp",

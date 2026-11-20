@@ -196,6 +196,7 @@ limits:                           # W2 解析并校验，W4 才执行
 ```bash
 npm install          # 运行时依赖只有 yaml；devDeps 是 typescript / @types/node
 npm run build        # tsc -> dist/
+
 npm run check:w1     # W1 验收：差分比对 + 6 类边界
 npm run check:w2     # W2 验收：判定语义 + 20 种非法策略 + 性能
 npm run check:w3     # W3 验收：拦截路径 / ask / dry_run / 上游崩溃 / 无策略文件
@@ -206,8 +207,20 @@ npm run check:stress     # 8 MiB / 1000 次调用 / CRLF / BOM / 判定延迟
 npm run check:lint       # 正则回溯风险
 npm run check:coldstart  # 全新 HOME 的 3 分钟冷启动计时
 npm run check:real   # 真实 filesystem server：透传比对 + 拦 .env 放行普通文件
-npm run check:all
+npm run check:pkg    # 安装包边界：pack → 干净目录安装 → 实跑
+npm run check:all    # 以上全部
 ```
+
+## 发布
+
+`prepublishOnly` 会先 `npm run build`，所以 dist 一定是当前源码编译出来的。
+
+```bash
+npm run check:all      # 11 个 suite / 290 条断言必须全绿
+npm publish            # 需要先 npm login
+```
+
+包内只含 `dist/` + `packs/` + README + LICENSE（20 个文件，约 40 KB），不含源码、测试与 source map。
 
 ## 设计取舍（与方案一致）
 
