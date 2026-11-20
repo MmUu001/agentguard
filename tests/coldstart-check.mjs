@@ -85,9 +85,13 @@ check('策略落在默认位置 ~/.agentguard/policy.yaml', init.stdout.includes
   }
   const server = parsed?.mcpServers?.['filesystem (经 agentguard)'];
   check('init 打印的 JSON 片段可解析', parsed !== null);
+  const invocationOk =
+    (server?.command === 'npx' && server?.args?.some((a) => a.startsWith('agentguard'))) ||
+    (server?.command === 'node' && String(server?.args?.[0]).includes('dist/main.js'));
   check(
-    '片段里 command 指向 agentguard 且带 --policy',
-    server?.args?.includes('agentguard') && server?.args?.includes('--policy'),
+    '片段里的启动方式与实际运行方式一致',
+    invocationOk && server?.args?.includes('--policy'),
+    `${server?.command} ${String(server?.args?.[0] ?? '').slice(0, 40)}`,
   );
   check('片段不包含任何自动改写（只是打印）', !init.stdout.includes('已修改') && init.stdout.includes('不会改你的配置'));
 }

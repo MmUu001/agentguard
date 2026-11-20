@@ -10,7 +10,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
@@ -288,6 +288,29 @@ async function choosePacks(flags: Flags): Promise<string[]> {
   }
 }
 
+/**
+ * init 打印给用户的「怎么启动我」。
+ *
+ * 两种运行方式必须给出不同的命令，否则用户复制粘贴就是错的：
+ *   - 通过 npm / npx 安装（路径里有 node_modules）→ `npx -y <发包标识>`
+ *   - 本地仓库直接跑（例如 node dist/main.js init）→ `node <本文件的绝对路径>`
+ *
+ * beta 期间发包标识带 @beta：npm 上没有 latest 标签，`npx -y agentguard` 会 404。
+ * 转正时把 PUBLISHED_SPEC 改回 'agentguard'（见 docs/release-checklist.md）。
+ */
+const PUBLISHED_SPEC = 'agentguard@beta';
+
+function selfInvocation(): { command: string; prefix: string[] } {
+  const entry = process.argv[1] ?? '';
+  const isInstalled = /[\\/]node_modules[\\/]/.test(entry);
+  const isBuilt = /[\\/]dist[\\/]/.test(entry);
+
+  if (isInstalled || !isBuilt) {
+    return { command: 'npx', prefix: ['-y', PUBLISHED_SPEC] };
+  }
+  return { command: 'node', prefix: [entry.replace(/\\/g, '/')] };
+}
+
 async function initCommand(argv: readonly string[]): Promise<number> {
   let flags: Flags;
   try {
@@ -316,7 +339,9 @@ async function initCommand(argv: readonly string[]): Promise<number> {
     return 2;
   }
 
-  const targetDir = stringFlag(flags, 'dir') ?? join(homedir(), '.agentguard');
+  // 必须绝对路径：MCP 客户端启动 server 时的工作目录不是这里，
+  // 打印一个相对路径出去，复制进配置就是坏的。
+  const targetDir = resolve(stringFlag(flags, 'dir') ?? join(homedir(), '.agentguard'));
   const policyPath = join(targetDir, 'policy.yaml');
 
   if (existsSync(policyPath) && flags.force !== true) {
@@ -387,13 +412,14 @@ async function initCommand(argv: readonly string[]): Promise<number> {
     writeFileSync(join(targetDir, 'packs', `${id}.yaml`), readPackText(id), 'utf8');
   }
 
+  const self = selfInvocation();
+
   const config = {
     mcpServers: {
       'filesystem (经 agentguard)': {
-        command: 'npx',
+        command: self.command,
         args: [
-          '-y',
-          NAME,
+          ...self.prefix,
           '--policy',
           policyPath,
           '--',
@@ -417,7 +443,9 @@ async function initCommand(argv: readonly string[]): Promise<number> {
   lines.push(`未匹配    deny（fail-closed）`);
   lines.push('');
   lines.push('下一步');
-  lines.push(`  1. 预览会拦什么： ${NAME} check --policy "${policyPath}"`);
+  lines.push(
+    `  1. 预览会拦什么： ${[self.command, ...self.prefix].join(' ')} check --policy "${policyPath}"`,
+  );
   lines.push(`  2. 把下面这段加到 Claude Code / Cursor / Cline 的 MCP 配置里（agentguard 不会改你的配置）：`);
   lines.push('');
   lines.push(JSON.stringify(config, null, 2));
