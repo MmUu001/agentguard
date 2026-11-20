@@ -1,0 +1,43 @@
+version: 1
+
+# git · 版本库破坏（开发者可选）
+#
+# 这里的动作大多不可从 args 判断「是否会丢东西」，所以一律用 ask（当前实现 = 明确拒绝），
+# 让用户自己看一眼再决定，而不是靠猜测。
+#
+# 明确不覆盖：`git rebase` 已推送分支 —— 从命令行参数无法知道「这个分支推送过没有」，
+# 硬写会变成对本地日常 rebase 的持续误伤。这类判断需要读 git 状态，超出「纯 args 匹配」的能力。
+
+rules:
+  - id: git-reset-hard
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: 'git\s+reset\s+(?:[^\n]*\s)?--hard\b'
+    decision: ask
+    reason: reset --hard 会丢弃未提交的改动
+
+  # git clean -fdx / -xfd / -fdxq 都算
+  - id: git-clean-fdx
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: 'git\s+clean\s+[^\n]*(?:-[a-zA-Z]*f[a-zA-Z]*[dx]|-[a-zA-Z]*[dx][a-zA-Z]*f)'
+    decision: ask
+    reason: git clean 会删除未跟踪文件（含被 .gitignore 忽略的）
+
+  - id: git-push-delete
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '(?:git\s+push\s+(?:[^\n]*\s)?(?:--delete|-d)\b|git\s+push\s+\S+\s+:)'
+    decision: ask
+    reason: 删除远端分支
+
+  - id: git-checkout-discard
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: 'git\s+(?:checkout|restore)\s+(?:--\s+)?(?:\.|\*)(?:\s|$)'
+    decision: ask
+    reason: 丢弃工作区未提交的改动

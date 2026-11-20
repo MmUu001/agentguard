@@ -1,0 +1,104 @@
+version: 1
+
+# core · 灾难性误操作（默认必装）
+#
+# 取舍：只拦「几乎不可能正确」的命令。判错 = 误伤一次正常开发；
+# 判漏 = 整个项目或整台机器没了。所以这几个正则写宽一点是故意的。
+#
+# 工具名列表覆盖 Claude Code / Cursor / Cline / 各家 shell server 的常见命名，
+# 不是精确匹配清单 —— 你的工具名不在里面，加一行即可。
+
+rules:
+  # ── rm 递归强制删除 ────────────────────────────────────────────────
+  # 覆盖：rm -rf /、rm -fr /var、rm -r -f /、rm -rf ~、rm -rf /*、rm -rf $HOME
+  # 不覆盖：rm -rf ./build（正常开发，必须放过）
+  - id: core-rm-rf-root
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '(?:^|[\s;&|])rm\s+(?:-[a-zA-Z]+\s+)*-(?:[a-zA-Z]*r[a-zA-Z]*f|[a-zA-Z]*f[a-zA-Z]*r)[a-zA-Z]*\s+(?:/|/\*|~|~/\*|\$HOME/?)(?:[\s;&|]|$)'
+    decision: deny
+    reason: 递归强制删除根目录或家目录
+
+  # rm -r -f / —— 短参数拆开写，上面那条正则吃不到
+  - id: core-rm-rf-split-flags
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '(?:^|[\s;&|])rm\s+(?:-[a-zA-Z]+\s+)*(?:-[rR]\s+-[a-zA-Z]*f[a-zA-Z]*|-[fF]\s+-[a-zA-Z]*r[a-zA-Z]*)\s+(?:/|/\*|~|~/\*|\$HOME/?|/(?:etc|usr|bin|sbin|lib|lib64|boot|var|opt|sys|proc|dev|Windows|System|Library)(?:/|[\s;&|]|$))'
+    decision: deny
+    reason: 递归强制删除根目录或家目录（参数拆写变体）
+
+  # 系统目录：rm -rf /var、rm -rf /etc/nginx 之类。/tmp 与用户项目目录不在此列
+  - id: core-rm-rf-system
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '(?:^|[\s;&|])rm\s+(?:-[a-zA-Z]+\s+)*-(?:[a-zA-Z]*r[a-zA-Z]*f|[a-zA-Z]*f[a-zA-Z]*r)[a-zA-Z]*\s+/(?:etc|usr|bin|sbin|lib|lib64|boot|var|opt|sys|proc|dev|Windows|System|Library|Applications|private)(?:/|[\s;&|]|$)'
+    decision: deny
+    reason: 递归删除系统目录
+
+  # ── git 强制推送 ──────────────────────────────────────────────────
+  # --force-with-lease 是安全版本，必须放过
+  - id: core-force-push
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: 'git\s+push\s+(?:[^\n]*\s)?(?:-f\b|--force(?!-))'
+    decision: ask
+    reason: 强制推送会覆盖远端历史
+
+  # ── 破坏性 SQL ────────────────────────────────────────────────────
+  - id: core-sql-destructive-command
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '\b(?:drop\s+(?:table|database|schema)|truncate\s+table)\b'
+    decision: deny
+    reason: 破坏性 SQL
+
+  - id: core-sql-destructive-query
+    match:
+      tool: [postgres_query, mysql_query, sqlite_query, execute_sql, run_sql, db_query]
+      args.query:
+        regex: '\b(?:drop\s+(?:table|database|schema)|truncate\s+table)\b'
+    decision: deny
+    reason: 破坏性 SQL
+
+  # ── 下载即执行 ────────────────────────────────────────────────────
+  - id: core-pipe-to-shell
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '(?:curl|wget)\s[^\n|]*\|\s*(?:sudo\s+)?(?:ba|z|k|da)?sh\b'
+    decision: deny
+    reason: 把远程脚本直接管道给 shell 执行
+
+  # ── 写系统目录 / 私钥 ─────────────────────────────────────────────
+  - id: core-write-system-path
+    match:
+      tool: [write_file, write_text_file, edit_file, create_directory, move_file, apply_patch]
+      args.path:
+        glob:
+          - '/etc/**'
+          - '/usr/**'
+          - '/bin/**'
+          - '/sbin/**'
+          - '/boot/**'
+          - '/lib/**'
+          - '/System/**'
+          - '/Library/**'
+          - 'C:/Windows/**'
+          - '**/.ssh/**'
+          - '**/.aws/**'
+    decision: deny
+    reason: 写入系统目录或凭据目录
+
+  # ── 磁盘级破坏 ────────────────────────────────────────────────────
+  - id: core-disk-destroy
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '\b(?:mkfs(?:\.\w+)?|shred\s[^\n]*/dev/|dd\s[^\n]*of=/dev/)'
+    decision: deny
+    reason: 格式化或覆写磁盘设备

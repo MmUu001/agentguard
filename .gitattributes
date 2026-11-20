@@ -1,0 +1,2 @@
+# 统一 LF：dist/main.js 第一行是 shebang，带 \r 在 Linux/macOS 上会直接执行失败
+* text=auto eol=lf

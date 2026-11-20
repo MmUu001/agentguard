@@ -1,0 +1,48 @@
+version: 1
+
+# net · 误触内网与付费接口（有线上业务时再加）
+#
+# 这些规则的共同点是「一次误触的代价不可逆」：打到生产内网、扣一次钱。
+# 因此用 ask（当前实现 = 明确拒绝），而不是 allow 后再补救。
+#
+# 明确不覆盖：「生产域名白名单外」需要 allowlist 语义（DSL 目前只有逐条 deny/allow），
+# 写死的域名列表很快就会过期，留给后续版本。
+
+rules:
+  - id: net-internal-address-command
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b'
+    decision: ask
+    reason: 访问内网地址（可能是生产环境）
+
+  - id: net-internal-address-url
+    match:
+      tool: [fetch, web_fetch, http_request, http_get, curl, browser_navigate]
+      args.url:
+        regex: '\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b'
+    decision: ask
+    reason: 访问内网地址（可能是生产环境）
+
+  - id: net-payment-api-command
+    match:
+      tool: [bash, shell, run_command, execute_command, terminal, powershell]
+      args.command:
+        regex: '(?:api\.stripe\.com/v1/(?:charges|refunds|payouts|transfers)|api\.paypal\.com/v1/payments|\bstripe\s+(?:charges|refunds|payouts|transfers)\s+(?:create|refund))'
+    decision: ask
+    reason: 调用支付类接口（可能真的扣钱）
+
+  - id: net-payment-api-url
+    match:
+      tool: [fetch, web_fetch, http_request, http_post, curl]
+      args.url:
+        regex: '(?:api\.stripe\.com/v1/(?:charges|refunds|payouts|transfers)|api\.paypal\.com/v1/payments)'
+    decision: ask
+    reason: 调用支付类接口（可能真的扣钱）
+
+# 单窗口调用上限：防的是「逻辑 bug 导致循环调用」这类烧钱事故，不是防人
+limits:
+  - tool: [bash, shell, run_command, execute_command]
+    max_calls: 200
+    window: 1h

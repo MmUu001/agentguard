@@ -1,0 +1,26 @@
+version: 1
+
+# 真实环境联调用的策略：允许 filesystem 的只读工具，但拦住凭据文件
+defaults:
+  on_no_match: deny
+
+rules:
+  - id: allow-fs
+    match:
+      tool:
+        - list_allowed_directories
+        - read_file
+        - read_text_file
+        - list_directory
+        - directory_tree
+        - search_files
+        - get_file_info
+    decision: allow
+
+  - id: block-env
+    match:
+      tool: [read_file, read_text_file]
+      args.path:
+        glob: ["**/.env*", "**/*.pem", "**/id_rsa*"]
+    decision: deny
+    reason: 凭据文件

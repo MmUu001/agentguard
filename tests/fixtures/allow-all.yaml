@@ -1,0 +1,4 @@
+version: 1
+defaults:
+  on_no_match: allow
+rules: []
