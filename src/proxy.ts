@@ -96,14 +96,24 @@ function pump(
   dst: NodeJS.WritableStream,
   sink: LineSink,
   endDstOnSourceEnd: boolean,
+  dstLabel: string,
 ): void {
   const splitter = new LineSplitter();
   let paused = false;
+  let dstBroken = false;
 
   dst.on('drain', () => {
     if (!paused) return;
     paused = false;
     src.resume();
+  });
+
+  // 高危防御：upstream 先退出而 client 还在写（或客户端断开时我们还在回写），
+  // dst.write 会触发 EPIPE。Writable 没有监听 'error' 事件时会直接抛出，
+  // 整个代理进程带着堆栈崩掉。这里转成日志 + 该方向停止转发。
+  dst.on('error', (err: Error) => {
+    dstBroken = true;
+    process.stderr.write(`agentguard: ${dstLabel} 写入失败，该方向停止转发：${err.message}\n`);
   });
 
   src.on('data', (chunk: Buffer | string) => {
@@ -112,6 +122,7 @@ function pump(
 
     for (const line of splitter.push(buf)) {
       if (sink(line) === false) continue;
+      if (dstBroken) continue;
       if (dst.write(line) === false) full = true;
     }
 
@@ -124,7 +135,7 @@ function pump(
 
   src.on('end', () => {
     const tail = splitter.flush();
-    if (tail !== undefined && sink(tail) !== false) dst.write(tail);
+    if (!dstBroken && tail !== undefined && sink(tail) !== false) dst.write(tail);
     if (endDstOnSourceEnd) dst.end();
   });
 
@@ -525,6 +536,7 @@ export function startProxy(spec: ProxySpec): ProxyHandle {
       child.stdin,
       (line) => (gate === null ? true : gate.onClientLine(line)),
       true,
+      'client → upstream',
     );
   }
 
@@ -538,6 +550,7 @@ export function startProxy(spec: ProxySpec): ProxyHandle {
         return true;
       },
       false,
+      'upstream → client',
     );
   }
 

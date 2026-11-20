@@ -152,6 +152,8 @@ export async function runDemo(options: { policyPath?: string } = {}): Promise<nu
     );
 
     const run = child;
+    // 代理退出后 demo 继续写 stdin 会 EPIPE；忽略即可，退出流程自己会收尾
+    run.stdin?.on('error', () => {});
     const pending = new Map<number, (msg: unknown) => void>();
     let nextId = 0;
     let buffer = '';

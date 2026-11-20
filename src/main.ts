@@ -177,6 +177,11 @@ function resolvePolicy(explicit: readonly string[]): CompiledPolicy {  if (expli
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
+  // 客户端断开后写 stdout 会 EPIPE；不挂监听器会让进程带着堆栈崩掉
+  process.stdout.on('error', (err: Error) => {
+    process.stderr.write(`agentguard: stdout 写入失败（客户端可能已断开）：${err.message}\n`);
+  });
+
   // 子命令优先于「把第一个词当 upstream 命令」的兜底行为
   if (
     argv[0] === 'audit' ||

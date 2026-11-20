@@ -396,6 +396,12 @@ function collectPolicyFlags(argv: readonly string[]): { policies: string[]; rest
 }
 
 function checkCommand(argv: readonly string[]): number {
+  // 必须在参数校验之前：否则 --help 会被当成未知参数拦下，永远到不了帮助页
+  if (argv.includes('--help') || argv.includes('-h')) {
+    process.stdout.write(checkUsage() + '\n');
+    return 0;
+  }
+
   let policies: string[];
   try {
     const parsed = collectPolicyFlags(argv);
@@ -404,11 +410,6 @@ function checkCommand(argv: readonly string[]): number {
   } catch (err) {
     process.stderr.write(`${NAME}: ${(err as Error).message}\n\n${checkUsage()}\n`);
     return 2;
-  }
-
-  if (argv.includes('--help') || argv.includes('-h')) {
-    process.stdout.write(checkUsage() + '\n');
-    return 0;
   }
 
   if (policies.length === 0) {

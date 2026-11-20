@@ -20,6 +20,8 @@ export class McpClient {
       ((msg, respond) => respond({ content: [{ type: 'text', text: 'default' }], model: 'm', role: 'assistant' }));
 
     this.exited = new Promise((res) => proc.once('close', (code) => res(code)));
+    // 代理退出后继续写 stdin 会 EPIPE；测试里不挂监听器会让整个测试进程崩掉
+    proc.stdin?.on('error', () => {});
     proc.stderr.on('data', (d) => {
       this.stderr += d.toString('utf8');
     });
