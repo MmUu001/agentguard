@@ -414,6 +414,10 @@ async function initCommand(argv: readonly string[]): Promise<number> {
 
   const self = selfInvocation();
 
+  // JSON 里 Windows 反斜杠会被转义成 \\，看起来跟文档示例不一样，容易让人怀疑"路径不对"。
+  // 正斜杠在 Windows 上同样有效，统一成 / 更好读。
+  const jsonPolicyPath = policyPath.replace(/\\/g, '/');
+
   const config = {
     mcpServers: {
       'filesystem (经 agentguard)': {
@@ -421,7 +425,7 @@ async function initCommand(argv: readonly string[]): Promise<number> {
         args: [
           ...self.prefix,
           '--policy',
-          policyPath,
+          jsonPolicyPath,
           '--',
           'npx',
           '-y',
