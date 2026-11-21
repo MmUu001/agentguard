@@ -15,13 +15,13 @@ export const TOOL_ALIASES: Readonly<Record<string, readonly string[]>> = {
     'run_command', 'execute_command', 'run_terminal_cmd',
     'terminal', 'powershell',
   ],
-  read: [
+  read_file: [
     'Read', 'read_file', 'read_text_file', 'read_multiple_files',
     'view_file', 'open_file',
-    'list_directory', 'directory_tree', 'get_file_info',
-    'search_files', 'list_files',
-    'LS', 'Glob', 'Grep',
-    'list_allowed_directories',
+  ],
+  search: [
+    'Glob', 'Grep', 'LS', 'list_files', 'list_directory', 'directory_tree',
+    'search_files', 'get_file_info', 'codebase_search',
   ],
   write: [
     'Write', 'write_file', 'write_text_file',

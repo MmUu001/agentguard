@@ -38,14 +38,7 @@ export function baselineRules(): unknown[] {
     {
       id: 'base-allow-argless',
       match: {
-        tool: [
-          'list_allowed_directories',
-          'grep',
-          'glob',
-          'search',
-          'codebase_search',
-          'list_tools',
-        ],
+        tool: ['list_allowed_directories', 'codebase_search', 'list_tools'],
       },
       decision: 'allow',
       reason: '基线：放行无路径参数的只读工具',
