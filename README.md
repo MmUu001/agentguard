@@ -247,8 +247,14 @@ limits:                           # W2 解析并校验，W4 才执行
 ## 开发
 
 ```bash
+git clone https://github.com/MmUu001/agentguard.git
+cd agentguard
 npm install          # 运行时依赖只有 yaml；devDeps 是 typescript / @types/node
 npm run build        # tsc -> dist/
+```
+
+> 在本仓库目录内调试请用 `node dist/main.js`，不要用 `npx @leeruu/agentguard`——
+> 在包自己的目录里 npx 会解析到当前项目本身，bin 未链接时直接失败。
 
 npm run check:w1     # W1 验收：差分比对 + 6 类边界
 npm run check:w2     # W2 验收：判定语义 + 20 种非法策略 + 性能
