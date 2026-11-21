@@ -37,6 +37,8 @@ export interface ProxySpec {
   /** 审计落盘；不传则不记录 */
   readonly audit?: AuditSink;
   readonly session?: string;
+  /** 策略文件内容哈希（sha256 前 12 位），进审计记录用于溯源 */
+  readonly policyHash?: string;
 }
 
 export interface ProxyHandle {
@@ -299,7 +301,7 @@ function peekId(line: Buffer): string | number | null | undefined {
 function createGate(
   policy: CompiledPolicy,
   out: NodeJS.WritableStream,
-  options: { audit?: AuditSink; limits?: LimitTracker; session: string },
+  options: { audit?: AuditSink; limits?: LimitTracker; session: string; policyHash?: string },
 ): Gate {
   // 已放行、尚未收到响应的请求 id；upstream 崩溃时它们必须收到错误，否则 client 会一直等
   const pending = new Set<string | number>();
@@ -333,6 +335,7 @@ function createGate(
         ms: Number(detail.ms.toFixed(3)),
         session: options.session,
         agent,
+        ...(options.policyHash === undefined ? {} : { policyHash: options.policyHash }),
         ...(detail.dryRun === true ? { dryRun: true } : {}),
       });
     } catch (err) {
@@ -504,6 +507,7 @@ export function startProxy(spec: ProxySpec): ProxyHandle {
           audit: spec.audit,
           limits: spec.policy.limits.length === 0 ? undefined : new LimitTracker(spec.policy.limits),
           session: spec.session ?? 'unknown',
+          policyHash: spec.policyHash,
         });
 
   // 必须在 done 的 close 监听之前注册：先把「未完成请求的错误」写出去，再让进程收尾

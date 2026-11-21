@@ -15,6 +15,7 @@
  */
 
 import { logger } from '../logger.js';
+import { expandToolNames } from './aliases.js';
 import { compileGlob, matchGlob } from './glob.js';
 import {
   PolicyError,
@@ -27,7 +28,7 @@ import {
 
 const DECISIONS: readonly Decision[] = ['allow', 'deny', 'ask'];
 const OPERATORS: readonly OperatorKind[] = ['glob', 'regex', 'equals', 'in', 'prefix'];
-const RULE_KEYS = new Set(['id', 'match', 'decision', 'reason']);
+const RULE_KEYS = new Set(['id', 'match', 'decision', 'reason', 'except']);
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -360,6 +361,21 @@ function compileMatcher(field: string, raw: unknown, origin: string, ruleId: str
     rawValue = raw;
   }
 
+  // 工具名别名归一：规则里写 bash，自动覆盖各客户端的等价工具名。
+  // 只对 equals / in 做（glob / regex 的 pattern 语义不由别名控制）。
+  if (path[0] === 'tool' && (op === 'equals' || op === 'in')) {
+    const names = Array.isArray(rawValue) ? rawValue : [rawValue];
+    const stringNames: string[] = [];
+    for (const n of names) {
+      if (typeof n !== 'string' || n === '') {
+        throw new PolicyError(`字段 "${field}" 的工具名必须是非空字符串`, origin, ruleId);
+      }
+      stringNames.push(n);
+    }
+    rawValue = expandToolNames(stringNames);
+    op = 'in';
+  }
+
   if (op === 'in' && !Array.isArray(rawValue)) {
     throw new PolicyError(`字段 "${field}" 的 in 取值得是数组`, origin, ruleId);
   }
@@ -431,14 +447,21 @@ function compileMatcher(field: string, raw: unknown, origin: string, ruleId: str
 
 function patternHits(matcher: FieldMatcher, value: unknown): boolean {
   const text = toText(value);
+  // tool 字段做大小写不敏感比较：各客户端工具名大小写不统一（Bash / bash）
+  const ci = matcher.path[0] === 'tool';
+  const same = (a: string, b: string): boolean =>
+    ci ? a.toLowerCase() === b.toLowerCase() : a === b;
 
   switch (matcher.op) {
     case 'equals':
-      return matcher.patterns.some((pattern) => toText(pattern) === text);
+      return matcher.patterns.some((pattern) => same(toText(pattern), text));
     case 'prefix':
-      return matcher.patterns.some((pattern) => text.startsWith(toText(pattern)));
+      return matcher.patterns.some((pattern) => {
+        const p = ci ? toText(pattern).toLowerCase() : toText(pattern);
+        return ci ? text.toLowerCase().startsWith(p) : text.startsWith(p);
+      });
     case 'in':
-      return matcher.patterns.some((pattern) => toText(pattern) === text);
+      return matcher.patterns.some((pattern) => same(toText(pattern), text));
     case 'regex':
       return matcher.regexes.some((re) => re.test(text));
     case 'glob':
@@ -504,13 +527,36 @@ export function compileRule(raw: unknown, origin: string, index: number): Compil
 
   const matchers = fields.map((field) => compileMatcher(field, match[field], origin, id));
 
+  // except：规则级白名单。主条件命中但 except 也命中 → 本规则不触发。
+  // 语义：整个 except 块按 match 同样的 AND/OR 规则判定，全部字段命中才算"被豁免"。
+  let exceptTest: ((tool: string, args: unknown) => boolean) | undefined;
+  if (raw.except !== undefined) {
+    const exceptBlock: unknown = raw.except;
+    if (!isRecord(exceptBlock)) {
+      throw new PolicyError(`规则 "${id}" 的 except 必须是对象`, origin, id);
+    }
+    const exceptFields = Object.keys(exceptBlock);
+    if (exceptFields.length === 0) {
+      throw new PolicyError(`规则 "${id}" 的 except 为空（写了等于没写）`, origin, id);
+    }
+    const exceptMatchers = exceptFields.map((field) =>
+      compileMatcher(field, exceptBlock[field], origin, id),
+    );
+    exceptTest = (tool: string, args: unknown) =>
+      exceptMatchers.every((matcher) => fieldHits(matcher, tool, args));
+  }
+
   return {
     id,
     decision: decision as Decision,
     reason,
     matchers,
     origin,
-    test: (tool: string, args: unknown) => matchers.every((matcher) => fieldHits(matcher, tool, args)),
+    test: (tool: string, args: unknown) => {
+      if (!matchers.every((matcher) => fieldHits(matcher, tool, args))) return false;
+      if (exceptTest !== undefined && exceptTest(tool, args)) return false;
+      return true;
+    },
   };
 }
 

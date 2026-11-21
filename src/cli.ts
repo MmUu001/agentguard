@@ -710,6 +710,141 @@ function demoCommand(argv: readonly string[]): Promise<number> {
   return runDemo({ ...(policyPath === undefined ? {} : { policyPath }) });
 }
 
+/* ================================================================== *
+ * explain
+ * ================================================================== */
+
+function explainUsage(): string {
+  return [
+    `${NAME} explain [options]`,
+    '',
+    '判定一次工具调用会得到什么结果（不执行，只判定）。',
+    `不传 --policy 时读 ${defaultPolicyPath()}`,
+    '',
+    'Options:',
+    '  --tool <name>      工具名（必填），如 bash / read_file',
+    '  --command <cmd>    以 bash 类工具的命令串做匹配',
+    '  --path <p>         以文件路径做匹配',
+    '  --policy <file>    指定策略文件',
+  ].join('\n');
+}
+
+function collectExplainArgs(argv: readonly string[]): {
+  policies: string[];
+  tool?: string;
+  command?: string;
+  path?: string;
+  rest: string[];
+} {
+  const policies: string[] = [];
+  const opts: { tool?: string; command?: string; path?: string } = {};
+  const rest: string[] = [];
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === '--policy') {
+      const value = argv[i + 1];
+      if (value === undefined) throw new FlagError('--policy 后面必须跟文件路径');
+      policies.push(value);
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith('--policy=')) {
+      policies.push(arg.slice('--policy='.length));
+      continue;
+    }
+    if (arg === '--tool' || arg === '--command' || arg === '--path') {
+      const value = argv[i + 1];
+      if (value === undefined) throw new FlagError(`${arg} 后面必须跟一个值`);
+      opts[arg.slice(2) as 'tool' | 'command' | 'path'] = value;
+      i += 1;
+      continue;
+    }
+    if (arg === '--help' || arg === '-h') {
+      rest.push('--help');
+      continue;
+    }
+    rest.push(arg);
+  }
+
+  return { policies, ...opts, rest };
+}
+
+function explainCommand(argv: readonly string[]): number {
+  let parsed: ReturnType<typeof collectExplainArgs>;
+  try {
+    parsed = collectExplainArgs(argv);
+  } catch (err) {
+    process.stderr.write(`${NAME}: ${(err as Error).message}\n\n${explainUsage()}\n`);
+    return 2;
+  }
+
+  if (parsed.rest.includes('--help') || parsed.rest.includes('-h')) {
+    process.stdout.write(explainUsage() + '\n');
+    return 0;
+  }
+
+  if (parsed.rest.length > 0) {
+    process.stderr.write(`${NAME}: 不认识的参数 "${parsed.rest[0]}"\n\n${explainUsage()}\n`);
+    return 2;
+  }
+  if (parsed.policies[0] === 'help' && parsed.policies.length === 1) {
+    process.stdout.write(explainUsage() + '\n');
+    return 0;
+  }
+
+  const policyPaths =
+    parsed.policies.length > 0
+      ? parsed.policies
+      : existsSync(defaultPolicyPath())
+        ? [defaultPolicyPath()]
+        : null;
+
+  if (policyPaths === null) {
+    process.stderr.write(`${NAME}: 没有找到策略文件。先跑 \`${NAME} init\`\n`);
+    return 2;
+  }
+
+  const tool = parsed.tool;
+  if (tool === undefined) {
+    process.stderr.write(`${NAME}: --tool 必填（要判定的工具名）\n\n${explainUsage()}\n`);
+    return 2;
+  }
+  if (parsed.command === undefined && parsed.path === undefined) {
+    process.stderr.write(
+      `${NAME}: 至少给一个 --command 或 --path（要判定的内容）\n\n${explainUsage()}\n`,
+    );
+    return 2;
+  }
+
+  let policy: CompiledPolicy;
+  try {
+    policy = loadPolicy(policyPaths);
+  } catch (err) {
+    process.stderr.write(`${NAME}: 策略加载失败\n  ${(err as Error).message}\n`);
+    return 2;
+  }
+
+  const args: Record<string, unknown> = {};
+  if (parsed.command !== undefined) args.command = parsed.command;
+  if (parsed.path !== undefined) args.path = parsed.path;
+
+  const result = decide(policy, tool, args);
+  const verdict = result.decision === 'ask' ? 'ask*' : result.decision;
+
+  const lines: string[] = [];
+  lines.push('');
+  lines.push(`  判定   ${verdict}${result.decision === 'ask' ? '（当前无审批通道，按拒绝处理）' : ''}`);
+  lines.push(`  规则   ${result.ruleId ?? '(未命中规则 → fail-closed)'}`);
+  if (result.reason !== null) lines.push(`  原因   ${result.reason}`);
+  lines.push(`  策略   ${policy.sources.join(' + ')}`);
+  if (result.dryRun) lines.push('  模式   dry_run（真实运行时会放行，只记录）');
+  lines.push('');
+
+  process.stdout.write(lines.join('\n'));
+  return 0;
+}
+
 /* ================================================================== */
 
 export async function runCli(argv: readonly string[]): Promise<number> {
@@ -719,6 +854,7 @@ export async function runCli(argv: readonly string[]): Promise<number> {
   if (sub === 'init') return initCommand(rest);
   if (sub === 'check') return checkCommand(rest);
   if (sub === 'demo') return demoCommand(rest);
+  if (sub === 'explain') return explainCommand(rest);
 
   return 2;
 }

@@ -43,6 +43,7 @@ export interface AuditRecord {
   readonly ms: number;
   readonly session: string;
   readonly agent: string | null;
+  readonly policyHash?: string;
   readonly dryRun?: boolean;
 }
 

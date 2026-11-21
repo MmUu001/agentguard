@@ -14,7 +14,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -182,6 +182,20 @@ function resolvePolicy(explicit: readonly string[]): CompiledPolicy {
   return parsePolicy('version: 1\nrules: []\n', '<built-in deny-all>');
 }
 
+/** 策略内容哈希（sha256 前 12 位），进审计记录用于回答「当时用的是哪版策略」 */
+function computePolicyHash(policy: CompiledPolicy): string | undefined {
+  if (policy.sources.length === 0) return undefined;
+  const hash = createHash('sha256');
+  for (const src of policy.sources) {
+    try {
+      hash.update(readFileSync(src, 'utf8'));
+    } catch {
+      hash.update(src);
+    }
+  }
+  return hash.digest('hex').slice(0, 12);
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
@@ -196,7 +210,8 @@ async function main(): Promise<void> {
     argv[0] === 'audit' ||
     argv[0] === 'init' ||
     argv[0] === 'check' ||
-    argv[0] === 'demo'
+    argv[0] === 'demo' ||
+    argv[0] === 'explain'
   ) {
     const code = await runCli(argv);
     await flushStdout();
@@ -238,6 +253,7 @@ async function main(): Promise<void> {
   const policy = resolvePolicy(options.policies);
   const audit = openAudit();
   const session = randomBytes(2).toString('hex');
+  const policyHash = computePolicyHash(policy);
 
   let handle;
   try {
@@ -246,6 +262,7 @@ async function main(): Promise<void> {
       policy,
       ...(audit === null ? {} : { audit }),
       session,
+      ...(policyHash === undefined ? {} : { policyHash }),
     });
   } catch (err) {
     fail(`cannot start upstream: ${(err as Error).message}`, 1);
