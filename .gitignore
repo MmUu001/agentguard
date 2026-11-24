@@ -17,3 +17,4 @@ coverage/
 # 评审文档含未修复漏洞的复现方法，0.1.2 修复后再入库
 /docs/review-vs-aegis.md
 /docs/retro-0.1.x.md
+.tmp-gif/

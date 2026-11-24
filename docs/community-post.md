@@ -48,7 +48,7 @@ MCP 协议里，客户端启动 server 的方式就是一个配置项：
 把这行包一层，就多了一道闸：
 
     { "command": "npx",
-      "args": ["-y", "@leeruu/agentguard@beta",
+      "args": ["-y", "@leeruu/agentguard",
                "--policy", "…/policy.yaml",
                "--", "npx", "-y", "@modelcontextprotocol/server-filesystem", "/projects"] }
 
@@ -65,10 +65,10 @@ agent 完全不知道中间多了个进程。策略是一份 YAML：
 
 不想装、不想接也能先看效果——内置了一个假 MCP server，走真实代理链路：
 
-    $ npx -y @leeruu/agentguard@beta demo
+    $ npx -y @leeruu/agentguard demo
 
 （需要 Node ≥20。国内网络如果卡，加个镜像参数，实测 1.9 秒：
-  `npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard@beta demo`）
+  `npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard demo`）
 
      判定   调用               命中规则                上游
      allow  读 ./src/index.ts  base-allow-read         已执行
@@ -112,7 +112,7 @@ https://www.npmjs.com/package/@leeruu/agentguard
 
 不接入也能先跑（内置假 server，30 秒，需要 Node ≥20）：
 
-    npx -y @leeruu/agentguard@beta demo
+    npx -y @leeruu/agentguard demo
 
 国内网络卡的话加镜像：`--registry=https://registry.npmmirror.com`
 
@@ -147,7 +147,7 @@ Existing options didn't fit:
 So I put the interception point where every MCP client agrees: the `command` field.
 
     { "command": "npx",
-      "args": ["-y", "@leeruu/agentguard@beta", "--policy", "...", "--",
+      "args": ["-y", "@leeruu/agentguard", "--policy", "...", "--",
                "npx", "-y", "@modelcontextprotocol/server-filesystem", "/projects"] }
 
 The agent doesn't know there's an extra process. Policy is YAML. Priority is
@@ -156,7 +156,7 @@ denied (fail-closed); every decision is appended to a local JSONL file.
 
 No client needed to see it work — there's a built-in fake MCP server:
 
-    $ npx -y @leeruu/agentguard@beta demo
+    $ npx -y @leeruu/agentguard demo
 
      allow  读 ./src/index.ts  base-allow-read         已执行
      deny   读 ./.env          secrets-read-env        未执行

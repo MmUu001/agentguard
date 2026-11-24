@@ -23,9 +23,9 @@
 ### 第 1 步：先看效果（还没接入就能跑）
 
 ```bash
-npx -y @leeruu/agentguard@beta demo      # 内置假 server，直接看放行/拦截
-npx -y @leeruu/agentguard@beta init --yes
-npx -y @leeruu/agentguard@beta check     # 针对你自己的策略做预演
+npx -y @leeruu/agentguard demo      # 内置假 server，直接看放行/拦截
+npx -y @leeruu/agentguard init --yes
+npx -y @leeruu/agentguard check     # 针对你自己的策略做预演
 ```
 
 `demo` 的输出长这样（不需要任何 AI 客户端，也不写审计）：
@@ -39,7 +39,6 @@ npx -y @leeruu/agentguard@beta check     # 针对你自己的策略做预演
   ask*   git push --force   core-force-push         未执行
 ```
 
-> 现在是 beta：命令里的 `@beta` 别去掉（正式版发布后会去掉）。
 > 国内网络慢的话加镜像参数，实测 1.9 秒：`--registry=https://registry.npmmirror.com`
 
 `check` 会打印一张预演表，长这样：
@@ -66,7 +65,7 @@ Claude Code 用 `.mcp.json`（或 `~/.claude.json`），Cursor 用 `~/.cursor/mc
     "filesystem": {
       "command": "npx",
       "args": [
-        "-y", "@leeruu/agentguard@beta",
+        "-y", "@leeruu/agentguard",
         "--policy", "<家目录>/.agentguard/policy.yaml",
         "--",
         "npx", "-y", "@modelcontextprotocol/server-filesystem", "<你的项目目录>"
@@ -114,7 +113,7 @@ AGENTGUARD_LOG=debug <原命令>
 $env:AGENTGUARD_LOG="debug"; <原命令>
 
 # 看最近的判定
-npx -y @leeruu/agentguard@beta audit list --limit 20
+npx -y @leeruu/agentguard audit list --limit 20
 ```
 
 把 `check` 的 stderr 或者 `audit list` 的输出贴给我就行。**不用贴项目代码。**
@@ -126,6 +125,6 @@ npx -y @leeruu/agentguard@beta audit list --limit 20
 | Windows / macOS / Linux | ✅ 都在测（Windows 是重点覆盖） |
 | Claude Code / Cursor / Cline | ✅ 同一份配置结构 |
 | Node 版本 | 需要 ≥ 20 |
-| npm 版本 | 现在是 `@leeruu/agentguard@beta`（beta 期）。正式转正后命令里的 `@beta` 会去掉 |
+| npm 版本 | `@leeruu/agentguard@0.2.0`（latest，无 beta tag） |
 | 工具返回值检查 | ❌ 没做，明确缺口 |
 | 交互式审批（ask 弹确认） | ❌ 没做，`ask` 当前一律拒绝 |

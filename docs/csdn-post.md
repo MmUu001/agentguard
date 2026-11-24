@@ -83,7 +83,7 @@ MCP 协议里，客户端启动 server 的方式就是一个配置项：
 {
   "command": "npx",
   "args": [
-    "-y", "@leeruu/agentguard@beta",
+    "-y", "@leeruu/agentguard",
     "--policy", "C:/Users/你/.agentguard/policy.yaml",
     "--",
     "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:/projects"
@@ -144,7 +144,7 @@ rules:
 内置了一个假 MCP server，走**真实的代理链路**跑一遍，不需要你接任何 AI 客户端：
 
 ```bash
-npx -y @leeruu/agentguard@beta demo
+npx -y @leeruu/agentguard demo
 ```
 
 （在这里插入图片：`docs/images/csdn/terminal-demo.png`）
@@ -176,10 +176,10 @@ npx -y @leeruu/agentguard@beta demo
 
 ```bash
 # 1. 生成策略（不会修改你任何客户端配置）
-npx -y @leeruu/agentguard@beta init --yes
+npx -y @leeruu/agentguard init --yes
 
 # 2. 预览它会拦住什么（还没接入就能跑）
-npx -y @leeruu/agentguard@beta check
+npx -y @leeruu/agentguard check
 ```
 
 `init` 会在 `~/.agentguard/` 下生成 `policy.yaml` 和四个策略包，并打印一段可以直接复制的 JSON。
@@ -193,14 +193,14 @@ npx -y @leeruu/agentguard@beta check
 第一次接进去建议先开观察模式：
 
 ```bash
-npx -y @leeruu/agentguard@beta init --observe --force
+npx -y @leeruu/agentguard init --observe --force
 ```
 
 只记录不拦截，跑一周看审计：
 
 ```bash
-npx -y @leeruu/agentguard@beta audit list --limit 20
-npx -y @leeruu/agentguard@beta audit stats --since 7d
+npx -y @leeruu/agentguard audit list --limit 20
+npx -y @leeruu/agentguard audit stats --since 7d
 ```
 
 先看，再拦。这才是这类工具的正确启动姿势。
@@ -236,7 +236,7 @@ npm 地址：https://www.npmjs.com/package/@leeruu/agentguard
 国内网络如果 npx 慢，加镜像参数（实测 1.9 秒）：
 
 ```bash
-npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard@beta demo
+npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard demo
 ```
 
 ---

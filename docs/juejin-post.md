@@ -62,7 +62,7 @@ MCP 协议里，客户端启动 server 的方式就是一个配置项：
 {
   "command": "npx",
   "args": [
-    "-y", "@leeruu/agentguard@beta",
+    "-y", "@leeruu/agentguard",
     "--policy", "C:/Users/你/.agentguard/policy.yaml",
     "--",
     "npx", "-y", "@modelcontextprotocol/server-filesystem", "/projects"
@@ -107,7 +107,7 @@ rules:
 内置了一个假 MCP server，走真实代理链路跑一遍：
 
 ```bash
-npx -y @leeruu/agentguard@beta demo
+npx -y @leeruu/agentguard demo
 ```
 
 输出是这样（真实运行结果）：
@@ -141,10 +141,10 @@ npx -y @leeruu/agentguard@beta demo
 
 ```bash
 # 1. 生成策略（不覆盖你任何客户端配置）
-npx -y @leeruu/agentguard@beta init --yes
+npx -y @leeruu/agentguard init --yes
 
 # 2. 先看它会拦什么（还没接入就能跑）
-npx -y @leeruu/agentguard@beta check
+npx -y @leeruu/agentguard check
 ```
 
 然后把它打印的那段 JSON 粘进客户端的 MCP 配置——**是包住你已有的 filesystem server，不是新增一个**。
@@ -152,7 +152,7 @@ npx -y @leeruu/agentguard@beta check
 第一次接进去建议开观察模式：
 
 ```bash
-npx -y @leeruu/agentguard@beta init --observe --force
+npx -y @leeruu/agentguard init --observe --force
 ```
 
 只记录不拦截，跑一周看 `audit list` 里 agent 到底在干什么，再决定收紧什么。
@@ -164,7 +164,7 @@ Apache-2.0，不联网、不需要账号、没有 telemetry，审计就是本地
 国内网络如果 npx 很慢，加镜像参数（实测 1.9 秒）：
 
 ```bash
-npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard@beta demo
+npx -y --registry=https://registry.npmmirror.com @leeruu/agentguard demo
 ```
 
 npm：https://www.npmjs.com/package/@leeruu/agentguard

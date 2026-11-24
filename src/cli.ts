@@ -164,13 +164,13 @@ async function choosePacks(flags: Flags): Promise<string[]> {
  *   - 通过 npm / npx 安装（路径里有 node_modules）→ `npx -y <发包标识>`
  *   - 本地仓库直接跑（例如 node dist/main.js init）→ `node <本文件的绝对路径>`
  *
- * beta 期间发包标识带 @beta：npm 上没有 latest 标签，`npx -y agentguard` 会 404。
- * 转正时把 PUBLISHED_SPEC 改回不带 @beta 的形态（见 docs/release-checklist.md）。
+ * 0.2.0 起转正：发包标识不带 dist-tag，`npx -y @leeruu/agentguard` 装到的就是
+ * latest（0.1.x 的 @beta tag 仍保留在 registry，指向 0.1.2）。
  *
  * 为什么要 scope：`agentguard` 这个无 scope 名被 npm 的相似性策略永久拦住
  * （与已存在的 agent-guard 太像），scoped 包不参与该检查。
  */
-export const PUBLISHED_SPEC = '@leeruu/agentguard@beta';
+export const PUBLISHED_SPEC = '@leeruu/agentguard';
 function selfInvocation(): { command: string; prefix: string[] } {
   const entry = process.argv[1] ?? '';
   const isInstalled = /[\\/]node_modules[\\/]/.test(entry);

@@ -4,13 +4,17 @@
 
 夹在 agent 与真实 MCP server 之间的 stdio 代理。改 MCP 配置里的一行就生效，对 agent 完全透明。
 
+<p align="center">
+  <img src="docs/images/demo-agentguard.gif" alt="agentguard demo：读 .env 被拦、写 /etc/hosts 被拦、未定义工具 fail-closed" width="840">
+</p>
+
 ```bash
-npx -y @leeruu/agentguard@beta demo      # 不接任何 agent，直接看拦截效果（内置假 server 跑一遍）
-npx -y @leeruu/agentguard@beta init      # 生成 ~/.agentguard/policy.yaml（选策略包）
-npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接不接
+npx -y @leeruu/agentguard demo      # 不接任何 agent，直接看拦截效果（内置假 server 跑一遍）
+npx -y @leeruu/agentguard init      # 生成 ~/.agentguard/policy.yaml（选策略包）
+npx -y @leeruu/agentguard check     # 看它会拦住什么，再决定接不接
 ```
 
-> 当前是 beta：命令里的 `@beta` 别去掉。正式版转正后这些命令会去掉 `@beta`。
+> 边界先行：只看请求方向，不看工具返回值——返回值里的密钥泄漏拦不住，这是明确缺口，不假装支持。
 > `demo` 不需要任何 AI 客户端、不需要配置、不写审计——先看效果再决定装不装。
 > 国内网络慢的话加 `--registry=https://registry.npmmirror.com`（实测 1.9 秒）。
 
@@ -36,12 +40,12 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 
 ## 拦什么
 
-四套策略包（27 条规则），`init` 默认装 `core` + `secrets`：
+四套策略包（30 条规则），`init` 默认装 `core` + `secrets`：
 
 | 包 | 覆盖 |
 |---|---|
 | `core` | `rm -rf /`（含 `-r -f` 拆写）、系统目录、强制推送、`DROP TABLE`、`curl … \| sh`、写 `/etc` `~/.ssh`、`mkfs` / `dd of=/dev/` |
-| `secrets` | 读 `.env` 家族（放行 `.env.example`）/ 私钥 / 云凭据、云元数据端点 `169.254.169.254`、把密钥发到 issue / PR / HTTP body |
+| `secrets` | 读 `.env` 家族（放行 `.env.example`）/ 私钥 / 云凭据、云元数据端点 `169.254.169.254`、把密钥发到 issue / PR / HTTP body、**bash 里读凭据**（`cat .env` / 读密钥文件 / env dump） |
 | `git` | `reset --hard`、`clean -fdx`、删除远端分支、丢弃工作区改动 |
 | `net` | 内网地址、支付类接口、单窗口调用上限 |
 
@@ -61,8 +65,8 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 
 > 为什么做成这样、它拦不住什么：见仓库里的 [`docs/launch-article.md`](docs/launch-article.md)。
 
-> 状态：**已发布** `@leeruu/agentguard@0.1.0`（beta）。`core` + `secrets` + `git` + `net` 四套策略包，323 条断言全绿。
-> 源码 2,477 行（14 个文件）+ 319 行策略包 YAML；运行时依赖 1 个（`yaml`）；Node ≥ 20。
+> 状态：**已发布** `@leeruu/agentguard@0.2.0`。`core` + `secrets` + `git` + `net` 四套策略包 30 条规则，336 条断言全绿。
+> 源码 2,936 行（16 个文件）+ 295 行策略包 YAML；运行时依赖 1 个（`yaml`）；Node ≥ 20。
 > 仓库：<https://github.com/MmUu001/agentguard> · npm：<https://www.npmjs.com/package/@leeruu/agentguard>
 
 ## 现状
@@ -84,6 +88,7 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 - `dry_run` 只记录不拦截，审计里仍保留原始判定
 - 多策略文件按顺序合并，规则 id 全局唯一
 - 判定耗时 P99 **0.02ms**（4 条规则）/ **0.9ms**（1000 条规则未命中）
+- 跨客户端工具名别名：`read_file` / `view_file` / `ReadFile` 等按操作语义分组展开，规则对哪家客户端写都生效（`agentguard explain` 可查单点判定）
 
 **W3 · 拦截路径**
 
@@ -92,6 +97,8 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 - `ask` 无审批通道时明确拒绝（不静默放行、不阻塞）
 - 上游崩溃：未完成的调用回 `-32603`，client 不会一直等
 - 策略加载失败 → 退出码 2 且上游不会被启动；无策略文件 → deny-all + stderr 告警
+- `except` 例外：deny 规则可带白名单（如放行 `.env.example`），让「拦 .env 但放行模板」这类规则可自救
+- 每条审计记录含 `policyHash`（策略内容哈希）：改了规则之后，旧日志与新日志一眼可分
 
 **W4 · 审计与观察模式**
 
@@ -107,6 +114,17 @@ npx -y @leeruu/agentguard@beta check     # 看它会拦住什么，再决定接�
 agentguard audit list --limit 20 --decision deny
 agentguard audit stats --since 7d
 agentguard audit export --format csv
+agentguard explain --policy packs/core.yaml --policy packs/secrets.yaml \
+  --tool bash --command "cat .env"    # 只判定不执行：这条调用会命中哪条规则
+```
+
+`explain` 的真实输出：
+
+```
+  判定   deny
+  规则   secrets-shell-read
+  原因   通过 shell 读取凭据文件
+  策略   packs\core.yaml + packs\secrets.yaml
 ```
 
 环境变量：`AGENTGUARD_AUDIT_DIR`（审计目录）、`AGENTGUARD_AUDIT=off`（关闭）、`AGENTGUARD_AUDIT_KEEP_DAYS`（保留天数）、`AGENTGUARD_LOG=debug|info|warn|error`
@@ -152,7 +170,7 @@ agentguard [--policy <file>]... -- <真实 mcp server 命令> [参数...]
 示例：
 
 ```bash
-npx -y @leeruu/agentguard@beta --policy ~/.agentguard/policy.yaml \
+npx -y @leeruu/agentguard --policy ~/.agentguard/policy.yaml \
   -- npx -y @modelcontextprotocol/server-filesystem /projects
 ```
 
@@ -174,7 +192,7 @@ npx -y @leeruu/agentguard@beta --policy ~/.agentguard/policy.yaml \
     "filesystem": {
       "command": "npx",
       "args": [
-        "-y", "@leeruu/agentguard@beta",
+        "-y", "@leeruu/agentguard",
         "--policy", "C:/Users/me/.agentguard/policy.yaml",
         "--",
         "npx", "-y", "@modelcontextprotocol/server-filesystem", "/projects"
