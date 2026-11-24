@@ -293,7 +293,7 @@ npm run check:all    # 以上全部
 `prepublishOnly` 会先 `npm run build`，所以 dist 一定是当前源码编译出来的。
 
 ```bash
-npm run check:all      # 11 个 suite / 290 条断言必须全绿
+npm run check:all      # 15 个 suite / 336 条断言必须全绿
 npm publish            # 需要先 npm login
 ```
 

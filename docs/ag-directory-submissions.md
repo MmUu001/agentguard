@@ -41,46 +41,30 @@ across 4 packs; 18 attack cases blocked, 336 assertions green.
 
 ---
 
-## 渠道 2 · Glama（P1，你操作 5 分钟 + 登录）
+## 渠道 2 · Glama（✅ 已提交，条目已上线 2026-11-24）
 
-提交入口：<https://glama.ai/mcp/servers> 页面的 **Add Server** 按钮
+**条目页（已生成）**：<https://glama.ai/mcp/servers/MmUu001/agentguard>
 
 ### 实测结论（2026-11-24）
 
 - 列表页可达，收录量 126,885，**抓取型目录**：提交 repo URL 后自动抓取 GitHub 仓库生成条目页
-- AG **尚未被自动收录**（`glama.ai/mcp/servers/MmUu001/agentguard` 实测 404）
-- Add Server 需要登录（页面右上 Sign In / Sign Up，用 GitHub 账号 OAuth）
-
-### 流程
-
-1. <https://glama.ai> 右上角 **Sign In**（GitHub OAuth，用 MmUu001）
-2. 进 <https://glama.ai/mcp/servers> → 点 **Add Server**
-3. 填 repo URL：`https://github.com/MmUu001/agentguard` → 提交后自动抓取
-4. 抓取完成后打开条目页，核对自动抓取效果（重点：描述是否取自 README 首屏、GIF 是否显示）
-
-### 抓取效果核对要点（抓取型目录的展示 = 被抓仓库的 README 质量）
-
-- AG README 首屏：一句话定位 + GIF + 可复制命令——抓取型目录展示所需的三件套都在
-- GIF 是仓库相对路径 `docs/images/demo-agentguard.gif`，若 Glama 条目页图片断链，属目录侧渲染问题，不影响收录
-
-### 分类预期（Glama 自动归类，无需手填）
-
-从列表页过滤参数实证的分类 slug：`security-and-iam`（6,921 个条目）、`developer-tools`（30,520 个）——AG 预期落入这两个。
+- 用户表单提交后条目已生成：标题 `mcp-agentguard`、**Security + Developer Tools 双分类**自动归类、作者带 verified 标记、README 全文抓取（含 GIF 引用）
+- 提交表单字段实测：Name（kebab-case）/ Description（英文）/ GitHub Repository URL
+- README 抓取暴露一处旧数字残留（「11 个 suite / 290 条断言」）已于同日修复；抓取型目录跟随 repo 更新，下次抓取自动同步
+- 分类预期实证：Security（`security-and-iam`）+ Developer Tools（`developer-tools`），与预期一致
 
 ---
 
-## 渠道 3 · PulseMCP（P2，等网络窗口或你本地浏览器）
+## 渠道 3 · PulseMCP（⏸ 暂缓——全站暂停收录，等重开再提交）
 
 提交入口：<https://www.pulsemcp.com/submit>
 
 ### 实测结论（2026-11-24）
 
-- 站点可达但 `/submit` 页对非浏览器请求返回 **403**（反爬）；浏览器直访该页两次 60s 超时——页面强制加载的 recaptcha / jspm CDN 域在当前网络窗口不可达
-- 入口存在性已实证（站点 footer 有「Submit server/client」→ `/submit`）
-- **2026-11-24 用户侧提交完成**。表单字段实测：Name（kebab-case，填 `mcp-agentguard`）/ Description（英文 1-2 句）/ GitHub Repository URL / 分类选 Security
-- **⚠️ 同日发现：PulseMCP 全站暂停收录新条目**（官方横幅："submissions and listing changes are still paused while we rework how we ingest and manage listings"）——提交进的是暂停期队列，上架时间未知
-- 站内搜索 "agentguard" 已有 3 个同名项目（bmdhodl/mukundakatta/shuaicongxiaomai）——上架后靠 owner 前缀 slug 与 Description 首句「tool-call firewall」区分
-- 双周复核时复查上架状态；不重复提交
+- ⚠️ **全站暂停收录新条目**（官方横幅："New server submissions and listing changes are still paused while we rework how we ingest and manage listings"）——**暂缓提交**，等横幅消失再走一遍
+- 站内搜索 "agentguard" 已有 3 个同名项目（bmdhodl / mukundakatta / shuaicongxiaomai）——将来上架后靠 owner 前缀 slug 与 Description 首句「tool-call firewall」区分
+- 提交表单字段暂未实测（/submit 对非浏览器请求 403 反爬；重开后用浏览器访问）
+- 双周复核时复查横幅状态；条目页 URL 模式为 `/servers/<owner>-<name>`
 
 ### 流程（你本地浏览器直接开，避开本机网络窗口问题）
 
@@ -106,9 +90,9 @@ cross-client tool-name aliases. Try it in 10 seconds: npx -y @leeruu/agentguard 
 
 | 渠道 | 提交日期 | 条目 URL | 状态 |
 |---|---|---|---|
-| awesome-mcp-servers | | | 待 PR |
-| Glama | | | 待登录提交 |
-| PulseMCP | | | 待表单可达 |
+| awesome-mcp-servers | 2026-11-24 | （PR 链接待登记） | 已提交至 🔒 Security 分类，等维护者合并 |
+| Glama | 2026-11-24 | https://glama.ai/mcp/servers/MmUu001/agentguard | ✅ **已上线**（抓取验证通过） |
+| PulseMCP | 暂缓 | — | 全站暂停收录，等重开再提交 |
 
 > 每完成一个填一行。双周复核时对照此表查收录与点击。
 
