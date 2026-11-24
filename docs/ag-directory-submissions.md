@@ -108,3 +108,12 @@ cross-client tool-name aliases. Try it in 10 seconds: npx -y @leeruu/agentguard 
 | PulseMCP | | | 待表单可达 |
 
 > 每完成一个填一行。双周复核时对照此表查收录与点击。
+
+## W3 英文文章发布记录（2026-11-24 发布）
+
+| 平台 | URL | 发布验证 |
+|---|---|---|
+| dev.to | https://dev.to/mmuu001/the-mcp-stdio-disclosure-wont-get-patched-i-built-a-local-guard-for-the-layer-it-named-52b6 | ✅ 线上探针全过（cover GIF/正文 GIF/代码块/无注释泄漏） |
+| Hashnode | （待补公开 URL——用户给的是 /edit/ 编辑页地址） | 待验证 |
+
+> 48h 数据（浏览/回复）于 2026-11-26 回填；views 数据来自平台后台。
