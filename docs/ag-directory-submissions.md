@@ -77,7 +77,10 @@ across 4 packs; 18 attack cases blocked, 336 assertions green.
 
 - 站点可达但 `/submit` 页对非浏览器请求返回 **403**（反爬）；浏览器直访该页两次 60s 超时——页面强制加载的 recaptcha / jspm CDN 域在当前网络窗口不可达
 - 入口存在性已实证（站点 footer 有「Submit server/client」→ `/submit`）
-- **表单字段未实测** → 下面文案为预写版，打开表单后按字段名对号入座
+- **2026-11-24 用户侧提交完成**。表单字段实测：Name（kebab-case，填 `mcp-agentguard`）/ Description（英文 1-2 句）/ GitHub Repository URL / 分类选 Security
+- **⚠️ 同日发现：PulseMCP 全站暂停收录新条目**（官方横幅："submissions and listing changes are still paused while we rework how we ingest and manage listings"）——提交进的是暂停期队列，上架时间未知
+- 站内搜索 "agentguard" 已有 3 个同名项目（bmdhodl/mukundakatta/shuaicongxiaomai）——上架后靠 owner 前缀 slug 与 Description 首句「tool-call firewall」区分
+- 双周复核时复查上架状态；不重复提交
 
 ### 流程（你本地浏览器直接开，避开本机网络窗口问题）
 
