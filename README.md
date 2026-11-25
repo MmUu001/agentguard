@@ -174,6 +174,8 @@ npx -y @leeruu/agentguard --policy ~/.agentguard/policy.yaml \
   -- npx -y @modelcontextprotocol/server-filesystem /projects
 ```
 
+**Step-by-step onboarding guide (5 分钟接入，中文): [docs/quickstart.md](docs/quickstart.md)**
+
 **不绑定任何一家 agent。** 只要客户端能用 `command` + `args` 以 stdio 方式启动 MCP server，就能用 agentguard。
 
 | 客户端 | 配置位置 |
