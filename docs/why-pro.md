@@ -12,7 +12,11 @@ downloads. If that ever changes, forking this repo is trivial and everyone knows
 
 ## The tiers
 
-| | **Core** | **Pro** ($39, one-time) | **Pro Annual** ($79/yr) | **Enterprise** ($1.5k–5k/yr) |
+> **Prices below are indicative assumptions pending demand validation.** Nothing is
+> on sale; no payment link exists. Per the project plan, prices stay unprinted on any
+> sales surface until a waitlist confirms willingness to pay (see "Current status").
+
+| | **Core** | **Pro** (~$39, one-time) | **Pro Annual** (~$79/yr) | **Enterprise** (~$1.5k–5k/yr) |
 |---|---|---|---|---|
 | stdio proxy + policy engine | ✅ | ✅ | ✅ | ✅ |
 | 4 rule packs, 30 rules | ✅ | ✅ | ✅ | ✅ |

@@ -16,7 +16,7 @@
 | 写 `/etc/hosts`、`~/.ssh/config` | 拒绝 |
 | `rm -rf ./build`、`npm test`、`git push origin main` | 放行 |
 
-一共 27 条规则，分 `core` / `secrets` / `git` / `net` 四套，`init` 默认装前两套。规则是可读的 YAML，你可以随便改。
+四套策略包合计 30 条规则（`core` / `secrets` / `git` / `net`），`init` 默认装前两套（共 27 条）。规则是可读的 YAML，你可以随便改。
 
 ## 装（约 3 分钟，需要 Node ≥ 20）
 

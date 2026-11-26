@@ -299,7 +299,7 @@ npm run check:all      # 15 个 suite / 336 条断言必须全绿
 npm publish            # 需要先 npm login
 ```
 
-包内只含 `dist/` + `packs/` + README + LICENSE（20 个文件，约 40 KB），不含源码、测试与 source map。
+包内只含 `dist/` + `packs/` + README + LICENSE（26 个文件，约 55 KB），不含源码、测试与 source map。
 
 ## 设计取舍（与方案一致）
 

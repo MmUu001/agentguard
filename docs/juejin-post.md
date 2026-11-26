@@ -74,7 +74,7 @@ MCP 协议里，客户端启动 server 的方式就是一个配置项：
 
 **改 agent 的源码不现实，改 agent 的配置很现实。** 这是 MCP 相比于各家 hook 最大的价值：一次实现，所有支持 stdio 启动 server 的客户端通用。
 
-【图 1：架构示意，agent → agentguard → 真实 MCP server，建议自己画或截一张配置对比图】
+（配图：把下面这张 GIF 的 URL 直接粘进编辑器即可，掘金会自动转存——https://raw.githubusercontent.com/MmUu001/agentguard/main/docs/images/demo-agentguard.gif ）
 
 ## 策略是一份 YAML
 
@@ -128,7 +128,7 @@ npx -y @leeruu/agentguard demo
 
 注意 `rm -rf ./build` 是放行的，`git push --force-with-lease` 也是放行的——这类「安全版本」如果被误拦，产品就没人用了。
 
-【图 2：上面这段 demo 输出在你终端里的截图（自己跑一遍截屏，比任何示意图都有说服力）】
+（配图可选：自己跑一遍 demo 的终端截屏，比任何示意图都有说服力。不发图也不影响阅读——上面的输出块已在正文。）
 
 ## 它拦不住的（说清楚比藏着好）
 

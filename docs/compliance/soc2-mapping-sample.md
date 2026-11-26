@@ -56,6 +56,9 @@ management, policies) is not covered and not claimed.
 | Rule ID | Blocks | Evidence field |
 |---|---|---|
 | `secrets-leak-body` / `secrets-leak-content` / `secrets-leak-text` / `secrets-leak-description` | Outbound content (issue bodies, PR descriptions, HTTP payloads) containing credential-shaped strings | `audit: decision=deny, ruleId` |
+| `core-rm-rf-root` / `core-rm-rf-split-flags` / `core-rm-rf-system` | Recursive forced deletion of root / home / system directories | same |
+| `core-disk-destroy` | Disk format / raw-device overwrite | same |
+| `core-sql-destructive-command` / `core-sql-destructive-query` | Destructive SQL (DROP/TRUNCATE-class) sent by an agent | same |
 | `core-write-system-path` | Writes to system / credential directories | same |
 | `core-force-push` / `git-push-delete` | Remote history overwrite / remote branch deletion | same |
 | `git-reset-hard` / `git-clean-fdx` / `git-checkout-discard` | Destructive removal of working-tree and untracked data | same |
